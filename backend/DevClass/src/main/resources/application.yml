@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/devclass
+    username: dev
+    password: 1234   # ?? ????? ??
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate         # DDL? ?? ?? ? validate? ????
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: true
+
+  # ?? ??: SQL ???? devclass_db.sql ?? ??
+  sql:
+    init:
+      mode: never
+
+jwt:
+  secret: devclass-secret-key-must-be-at-least-256-bits-long-for-hs256
+  expiration-ms: 86400000    # 24??
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    com.devclass: DEBUG
+
