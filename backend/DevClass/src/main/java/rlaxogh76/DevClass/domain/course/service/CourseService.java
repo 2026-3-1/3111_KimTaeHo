@@ -1,21 +1,18 @@
 package rlaxogh76.DevClass.domain.course.service;
 
-import rlaxogh76.DevClass.domain.course.dto.CourseDetailResponse;
-import rlaxogh76.DevClass.domain.course.dto.CourseListResponse;
-import rlaxogh76.DevClass.domain.course.dto.CoursePageResponse;
-import rlaxogh76.DevClass.domain.course.dto.LectureResponse;
+import rlaxogh76.DevClass.domain.course.dto.*;
+import rlaxogh76.DevClass.domain.course.entity.Course;
 import rlaxogh76.DevClass.domain.course.repository.CourseRepository;
+import rlaxogh76.DevClass.domain.course.repository.CourseSpecification;
 import rlaxogh76.DevClass.domain.course.repository.LectureRepository;
 import rlaxogh76.DevClass.domain.review.repository.ReviewRepository;
 import rlaxogh76.DevClass.global.exception.BusinessException;
 import rlaxogh76.DevClass.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -28,49 +25,38 @@ public class CourseService {
     private final LectureRepository lectureRepository;
     private final ReviewRepository reviewRepository;
 
-    /**
-     * 강의 목록 조회
-     * - keyword: 제목 기준 검색 (description 제외)
-     * - category: 카테고리 필터
-     * - level: 난이도 필터
-     * - sort: price_asc | price_desc | rating | 기본값(최신순)
-     */
-    public CoursePageResponse getCourses(
-            String keyword, String category, String level,
-            int page, int size, String sort
-    ) {
-        String kw  = StringUtils.hasText(keyword)  ? keyword  : null;
-        String cat = StringUtils.hasText(category) ? category : null;
-        String lv  = StringUtils.hasText(level)    ? level    : null;
+    /** 강의 목록 조회 + 필터링 */
+    public CoursePageResponse getCourses(CourseFilterRequest req) {
+        Specification<Course> spec = CourseSpecification.filter(req);
+        Sort sort = buildSort(req.getSort());
+        Pageable pageable = PageRequest.of(req.getPage(), req.getSize(), sort);
 
-        Page<CourseListResponse> result;
+        Page<CourseListResponse> result = courseRepository
+                .findAll(spec, pageable)
+                .map(CourseListResponse::from);
 
-        if ("rating".equals(sort)) {
-            result = courseRepository
-                    .searchCoursesSortByRating(kw, cat, lv, PageRequest.of(page - 1, size))
-                    .map(CourseListResponse::from);
-        } else {
-            Sort sortOrder = switch (sort == null ? "" : sort) {
-                case "price_asc"  -> Sort.by(Sort.Direction.ASC,  "price");
-                case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
-                default           -> Sort.by(Sort.Direction.DESC, "id");
-            };
-            result = courseRepository
-                    .searchCourses(kw, cat, lv, PageRequest.of(page - 1, size, sortOrder))
-                    .map(CourseListResponse::from);
-        }
-
-        return new CoursePageResponse(result.getContent(), page, size, result.getTotalElements());
+        return new CoursePageResponse(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements()
+        );
     }
 
     /** 강의 상세 조회 */
     public CourseDetailResponse getCourse(Long courseId) {
-        var course = courseRepository.findById(courseId)
+        Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
+
         int lectureCount = lectureRepository.countByCourseId(courseId);
-        double avgRating = reviewRepository.findAverageRatingByCourseId(courseId);
         int reviewCount  = reviewRepository.countByCourseId(courseId);
-        return CourseDetailResponse.of(course, lectureCount, avgRating, reviewCount);
+
+        return CourseDetailResponse.of(
+                course,
+                lectureCount,
+                course.getAverageRating(),  // Course 엔티티 캐싱값 사용 (별도 AVG 쿼리 제거)
+                reviewCount
+        );
     }
 
     /** 강의 영상 목록 조회 */
@@ -82,5 +68,20 @@ public class CourseService {
                 .stream()
                 .map(LectureResponse::from)
                 .toList();
+    }
+
+    // -------------------------------------------------------
+    // private
+    // -------------------------------------------------------
+
+    private Sort buildSort(String sortType) {
+        if (sortType == null || sortType.isBlank()) {
+            return Sort.by(Sort.Direction.DESC, "id");
+        }
+        if (sortType.equals("popular"))    return Sort.by(Sort.Direction.DESC, "enrollmentCount");
+        if (sortType.equals("rating"))     return Sort.by(Sort.Direction.DESC, "averageRating");
+        if (sortType.equals("price_asc"))  return Sort.by(Sort.Direction.ASC,  "price");
+        if (sortType.equals("price_desc")) return Sort.by(Sort.Direction.DESC, "price");
+        return Sort.by(Sort.Direction.DESC, "id");
     }
 }

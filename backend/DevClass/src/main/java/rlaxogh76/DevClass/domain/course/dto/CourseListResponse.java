@@ -1,6 +1,7 @@
 package rlaxogh76.DevClass.domain.course.dto;
 
 import rlaxogh76.DevClass.domain.course.entity.Course;
+import java.math.BigDecimal;
 
 public record CourseListResponse(
         Long id,
@@ -10,7 +11,7 @@ public record CourseListResponse(
         String teacherName,
         String category,
         String level,
-        java.math.BigDecimal rating
+        BigDecimal averageRating
 ) {
     public static CourseListResponse from(Course course) {
         return new CourseListResponse(
@@ -21,7 +22,7 @@ public record CourseListResponse(
                 course.getTeacher().getEmail(),
                 course.getCategory(),
                 course.getLevel(),
-                course.getRating()
+                course.getAverageRating()   // getRating() → getAverageRating()
         );
     }
 }

@@ -2,6 +2,8 @@ package rlaxogh76.DevClass.domain.course.dto;
 
 import rlaxogh76.DevClass.domain.course.entity.Course;
 
+import java.math.BigDecimal;
+
 public record CourseDetailResponse(
         Long id,
         String title,
@@ -12,13 +14,13 @@ public record CourseDetailResponse(
         String category,
         String level,
         int lectureCount,
-        double averageRating,
+        BigDecimal averageRating,
         int reviewCount
 ) {
     public static CourseDetailResponse of(
             Course course,
             int lectureCount,
-            double averageRating,
+            BigDecimal averageRating,
             int reviewCount
     ) {
         return new CourseDetailResponse(

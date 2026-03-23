@@ -4,10 +4,13 @@ import rlaxogh76.DevClass.domain.course.entity.Course;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface CourseRepository extends JpaRepository<Course, Long> {
+public interface CourseRepository
+        extends JpaRepository<Course, Long>,
+        JpaSpecificationExecutor<Course> {   // 추가
 
     @Query(
             value = """
@@ -38,7 +41,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             WHERE (:keyword  IS NULL OR c.title LIKE %:keyword%)
               AND (:category IS NULL OR c.category = :category)
               AND (:level    IS NULL OR c.level    = :level)
-            ORDER BY c.rating DESC
+            ORDER BY c.averageRating DESC
             """,
             countQuery = """
             SELECT COUNT(c) FROM Course c

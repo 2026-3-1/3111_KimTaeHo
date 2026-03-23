@@ -43,6 +43,9 @@ public class EnrollmentService {
                 .course(course)
                 .totalProgress(0)
                 .build();
+
+        course.increaseEnrollmentCount();
+
         return EnrollmentResponse.from(enrollmentRepository.save(enrollment));
     }
 
@@ -64,6 +67,7 @@ public class EnrollmentService {
         if (enrollment.getTotalProgress() > 0) {
             throw new BusinessException(ErrorCode.CANNOT_CANCEL);
         }
+        enrollment.getCourse().decreaseEnrollmentCount();
         enrollmentRepository.delete(enrollment);
     }
 

@@ -6,6 +6,8 @@ import rlaxogh76.DevClass.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(
         name = "enrollments",
@@ -43,5 +45,13 @@ public class Enrollment {
     public void updateProgress(Integer progress, Lecture lecture) {
         this.totalProgress = progress;
         this.lastWatchedLecture = lecture;
+    }
+
+    @Column(name = "enrolled_at", nullable = false, updatable = false)
+    private LocalDateTime enrolledAt;
+
+    @PrePersist
+    protected void prePersist() {
+        this.enrolledAt = LocalDateTime.now();
     }
 }

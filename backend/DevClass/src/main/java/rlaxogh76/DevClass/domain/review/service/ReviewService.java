@@ -1,5 +1,6 @@
 package rlaxogh76.DevClass.domain.review.service;
 
+import rlaxogh76.DevClass.domain.course.entity.Course;
 import rlaxogh76.DevClass.domain.course.repository.CourseRepository;
 import rlaxogh76.DevClass.domain.enrollment.repository.EnrollmentRepository;
 import rlaxogh76.DevClass.domain.review.dto.ReviewRequest;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -37,28 +39,19 @@ public class ReviewService {
                 .toList();
     }
 
-    /**
-     * 리뷰 작성
-     * - 수강 중인 강의에만 작성 가능
-     * - 강의당 1개만 작성 가능
-     * TODO: 로그인 개발 완료 후 userId를 request 대신 파라미터로 분리
-     */
+    /** 리뷰 작성 */
     @Transactional
     public ReviewResponse create(ReviewRequest request) {
         Long userId = request.userId();
 
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
         var course = courseRepository.findById(request.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
 
-        // 수강 여부 검증
         if (!enrollmentRepository.existsByUserIdAndCourseId(userId, request.courseId())) {
             throw new BusinessException(ErrorCode.NOT_ENROLLED);
         }
-
-        // 중복 리뷰 검증
         if (reviewRepository.existsByUserIdAndCourseId(userId, request.courseId())) {
             throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
@@ -70,33 +63,42 @@ public class ReviewService {
                 .comment(request.comment())
                 .build();
 
-        return ReviewResponse.from(reviewRepository.save(review));
+        reviewRepository.save(review);
+        recalculateAverageRating(course);
+
+        return ReviewResponse.from(review);
     }
 
-    /**
-     * 리뷰 수정
-     * - 본인 리뷰만 수정 가능
-     * TODO: 로그인 개발 완료 후 userId를 request 대신 파라미터로 분리
-     */
+    /** 리뷰 수정 */
     @Transactional
     public ReviewResponse update(Long reviewId, ReviewUpdateRequest request) {
         Review review = reviewRepository.findByIdAndUserId(reviewId, request.userId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED));
 
         review.update(request.rating(), request.comment());
+        recalculateAverageRating(review.getCourse());
+
         return ReviewResponse.from(review);
     }
 
-    /**
-     * 리뷰 삭제
-     * - 본인 리뷰만 삭제 가능
-     * TODO: 로그인 개발 완료 후 userId를 RequestParam 대신 파라미터로 분리
-     */
+    /** 리뷰 삭제 */
     @Transactional
     public void delete(Long reviewId, Long userId) {
         Review review = reviewRepository.findByIdAndUserId(reviewId, userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED));
 
+        Course course = review.getCourse();
         reviewRepository.delete(review);
+        reviewRepository.flush();
+        recalculateAverageRating(course);
+    }
+
+    // -------------------------------------------------------
+    // private
+    // -------------------------------------------------------
+
+    private void recalculateAverageRating(Course course) {
+        BigDecimal avg = reviewRepository.findAverageRatingByCourseId(course.getId());
+        course.updateAverageRating(avg);
     }
 }

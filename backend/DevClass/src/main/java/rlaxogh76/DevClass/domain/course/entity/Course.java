@@ -4,6 +4,7 @@ import rlaxogh76.DevClass.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +37,13 @@ public class Course {
     @Column(nullable = false, length = 20)
     private String level;
 
-    @Column(nullable = false, precision = 3, scale = 2)
-    private java.math.BigDecimal rating;
+    @Builder.Default
+    @Column(name = "average_rating", nullable = false, precision = 3, scale = 2)
+    private BigDecimal averageRating = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "enrollment_count", nullable = false)
+    private Integer enrollmentCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", nullable = false)
@@ -53,5 +59,17 @@ public class Course {
     @PrePersist
     protected void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void increaseEnrollmentCount() {
+        this.enrollmentCount++;
+    }
+
+    public void decreaseEnrollmentCount() {
+        if (this.enrollmentCount > 0) this.enrollmentCount--;
+    }
+
+    public void updateAverageRating(BigDecimal averageRating) {
+        this.averageRating = averageRating;
     }
 }
