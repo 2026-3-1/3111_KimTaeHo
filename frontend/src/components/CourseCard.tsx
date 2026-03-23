@@ -6,19 +6,23 @@ interface Props {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  프론트엔드: "from-indigo-500 to-purple-500",
-  백엔드: "from-blue-500 to-cyan-500",
-  데이터사이언스: "from-emerald-500 to-teal-500",
-  "DevOps / 인프라": "from-orange-500 to-rose-500",
-  "알고리즘 / CS 기초": "from-violet-500 to-indigo-500",
-  모바일: "from-pink-500 to-rose-500",
+  frontend: "from-indigo-500 to-purple-500",
+  backend: "from-blue-500 to-cyan-500",
+  database: "from-emerald-500 to-teal-500",
+  devops: "from-orange-500 to-rose-500",
+  algorithm: "from-violet-500 to-indigo-500",
+};
+
+const LEVEL_LABEL: Record<string, string> = {
+  BEGINNER: "초급",
+  INTERMEDIATE: "중급",
+  ADVANCED: "고급",
 };
 
 const LEVEL_COLOR: Record<string, string> = {
-  입문: "bg-green-100 text-green-700",
-  초급: "bg-blue-100 text-blue-700",
-  중급: "bg-orange-100 text-orange-700",
-  고급: "bg-red-100 text-red-700",
+  BEGINNER: "bg-green-100 text-green-700",
+  INTERMEDIATE: "bg-orange-100 text-orange-700",
+  ADVANCED: "bg-red-100 text-red-700",
 };
 
 function getColor(category: string) {
@@ -29,6 +33,7 @@ export default function CourseCard({ course }: Props) {
   const navigate = useNavigate();
   const gradient = getColor(course.category);
   const levelClass = LEVEL_COLOR[course.level] ?? "bg-gray-100 text-gray-600";
+  const levelLabel = LEVEL_LABEL[course.level] ?? course.level;
 
   return (
     <div
@@ -46,13 +51,13 @@ export default function CourseCard({ course }: Props) {
 
       {/* 본문 */}
       <div className="p-4 flex flex-col flex-1">
-        {/* 카테고리 + 난이도 뱃지 */}
+        {/* 카테고리 + 난이도 배지 */}
         <div className="flex items-center gap-1.5 mb-2">
           <span className="text-xs text-gray-400">{course.category}</span>
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelClass}`}
           >
-            {course.level}
+            {levelLabel}
           </span>
         </div>
 
@@ -76,7 +81,7 @@ export default function CourseCard({ course }: Props) {
           <div className="flex items-center gap-1">
             <span className="text-yellow-400 text-xs">★</span>
             <span className="text-xs font-semibold text-gray-700">
-              {course.rating.toFixed(1)}
+              {Number(course.averageRating).toFixed(1)}
             </span>
           </div>
           <span className="text-sm font-bold text-indigo-600">
