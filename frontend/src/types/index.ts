@@ -6,7 +6,7 @@ export type Course = {
   teacherName: string;
   category: string;
   level: string;
-  rating: number;
+  averageRating: number; // rating, avarageRating 제거 후 통일
 };
 
 export type CoursePageResponse = {
@@ -14,16 +14,6 @@ export type CoursePageResponse = {
   page: number;
   size: number;
   totalElements: number;
-};
-
-export type Review = {
-  reviewId: number;
-  courseId: number;
-  userId: number;
-  userEmail: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
 };
 
 export type CourseDetail = {
@@ -45,4 +35,14 @@ export type Lecture = {
   title: string;
   videoUrl: string;
   duration: number;
+};
+
+export type Review = {
+  reviewId: number;
+  courseId: number;
+  userId: number;
+  userEmail: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
 };
