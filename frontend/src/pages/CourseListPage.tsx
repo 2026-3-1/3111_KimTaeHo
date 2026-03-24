@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getCourses } from "../api/course";
 import type { Course } from "../types";
 import CourseCard from "../components/CourseCard";
@@ -14,51 +15,69 @@ const CATEGORIES = [
 const LEVELS = ["입문", "초급", "중급", "고급"];
 const SORT_OPTIONS = [
   { value: "", label: "최신순" },
+  { value: "popular", label: "인기순" },
+  { value: "rating", label: "평점순" },
   { value: "price_asc", label: "가격 낮은순" },
   { value: "price_desc", label: "가격 높은순" },
-  { value: "rating", label: "평점 높은순" },
 ];
 
+const SIZE = 8;
+
 export default function CourseListPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [keyword, setKeyword] = useState("");
-  const [category, setCategory] = useState("");
-  const [level, setLevel] = useState("");
-  const [sort, setSort] = useState("");
-  const [page, setPage] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
 
-  const SIZE = 8;
+  // URL에서 현재 필터 값 읽기
+  const keyword = searchParams.get("keyword") ?? "";
+  const category = searchParams.get("category") ?? "";
+  const level = searchParams.get("level") ?? "";
+  const sort = searchParams.get("sort") ?? "";
+  const page = Number(searchParams.get("page") ?? "0");
+
   const totalPages = Math.ceil(totalElements / SIZE);
   const activeFilterCount = [category, level, sort].filter(Boolean).length;
 
-  // 필터 패널 외부 클릭 시 닫기
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const setParam = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      next.set("page", "0");
+      return next;
+    });
+  };
 
+  const goToPage = (p: number) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", String(p));
+      return next;
+    });
+  };
+
+  const handleReset = () => {
+    setSearchParams({});
+    setFilterOpen(false);
+  };
+
+  // searchParams 바뀔 때마다 API 호출
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        const data = await getCourses({
-          keyword,
-          category,
-          level,
-          sort,
-          page,
-          size: SIZE,
-        });
+        const params: Record<string, string> = {
+          page: String(page),
+          size: String(SIZE),
+        };
+        if (keyword) params.keyword = keyword;
+        if (category) params.category = category;
+        if (level) params.level = level;
+        if (sort) params.sort = sort;
+
+        const data = await getCourses(params);
         setCourses(data.content);
         setTotalElements(data.totalElements);
       } catch (e) {
@@ -68,45 +87,27 @@ export default function CourseListPage() {
       }
     };
     fetchCourses();
-  }, [keyword, category, level, sort, page]);
-
-  const handleSearch = () => {
-    setKeyword(inputValue);
-    setPage(1);
-  };
-
-  const handleReset = () => {
-    setCategory("");
-    setLevel("");
-    setSort("");
-    setPage(1);
-    setFilterOpen(false);
-  };
+  }, [searchParams]);
 
   return (
     <div>
-      {/* 상단 검색 + 필터 버튼 */}
-      <div className="flex gap-3 mb-6" ref={filterRef}>
+      {/* 검색 + 필터 버튼 */}
+      <div className="flex gap-3 mb-6">
         <div className="relative flex flex-1">
-          {/* 검색 아이콘 */}
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-lg">
             🔍
           </span>
           <input
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            defaultValue={keyword}
+            onKeyDown={(e) => {
+              if (e.key === "Enter")
+                setParam("keyword", (e.target as HTMLInputElement).value);
+            }}
             placeholder="강의 제목으로 검색"
             className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-white shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
         </div>
-        <button
-          onClick={handleSearch}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
-        >
-          검색
-        </button>
 
         {/* 필터 버튼 */}
         <div className="relative">
@@ -126,7 +127,6 @@ export default function CourseListPage() {
             )}
           </button>
 
-          {/* 필터 드롭다운 패널 */}
           {filterOpen && (
             <div className="absolute right-0 top-14 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50">
               {/* 카테고리 */}
@@ -138,10 +138,9 @@ export default function CourseListPage() {
                   {CATEGORIES.map((c) => (
                     <button
                       key={c}
-                      onClick={() => {
-                        setCategory(category === c ? "" : c);
-                        setPage(1);
-                      }}
+                      onClick={() =>
+                        setParam("category", category === c ? "" : c)
+                      }
                       className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                         category === c
                           ? "bg-indigo-600 text-white"
@@ -163,10 +162,7 @@ export default function CourseListPage() {
                   {LEVELS.map((l) => (
                     <button
                       key={l}
-                      onClick={() => {
-                        setLevel(level === l ? "" : l);
-                        setPage(1);
-                      }}
+                      onClick={() => setParam("level", level === l ? "" : l)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                         level === l
                           ? "bg-indigo-600 text-white"
@@ -188,10 +184,7 @@ export default function CourseListPage() {
                   {SORT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
-                      onClick={() => {
-                        setSort(opt.value);
-                        setPage(1);
-                      }}
+                      onClick={() => setParam("sort", opt.value)}
                       className={`text-left px-3 py-2 rounded-xl text-sm transition-colors ${
                         sort === opt.value
                           ? "bg-indigo-50 text-indigo-700 font-semibold"
@@ -204,7 +197,6 @@ export default function CourseListPage() {
                 </div>
               </div>
 
-              {/* 초기화 + 적용 */}
               <div className="flex gap-2">
                 <button
                   onClick={handleReset}
@@ -231,10 +223,7 @@ export default function CourseListPage() {
             <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-full font-medium">
               {category}
               <button
-                onClick={() => {
-                  setCategory("");
-                  setPage(1);
-                }}
+                onClick={() => setParam("category", "")}
                 className="ml-1 hover:text-indigo-900"
               >
                 ✕
@@ -245,10 +234,7 @@ export default function CourseListPage() {
             <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-full font-medium">
               {level}
               <button
-                onClick={() => {
-                  setLevel("");
-                  setPage(1);
-                }}
+                onClick={() => setParam("level", "")}
                 className="ml-1 hover:text-indigo-900"
               >
                 ✕
@@ -259,10 +245,7 @@ export default function CourseListPage() {
             <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-full font-medium">
               {SORT_OPTIONS.find((o) => o.value === sort)?.label}
               <button
-                onClick={() => {
-                  setSort("");
-                  setPage(1);
-                }}
+                onClick={() => setParam("sort", "")}
                 className="ml-1 hover:text-indigo-900"
               >
                 ✕
@@ -284,7 +267,7 @@ export default function CourseListPage() {
       {/* 강의 목록 */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: SIZE }).map((_, i) => (
             <div
               key={i}
               className="bg-gray-100 rounded-2xl h-64 animate-pulse"
@@ -308,28 +291,28 @@ export default function CourseListPage() {
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-12">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
+            onClick={() => goToPage(page - 1)}
+            disabled={page === 0}
             className="px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30"
           >
             이전
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {Array.from({ length: totalPages }, (_, i) => i).map((p) => (
             <button
               key={p}
-              onClick={() => setPage(p)}
+              onClick={() => goToPage(p)}
               className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${
                 p === page
                   ? "bg-indigo-600 text-white"
                   : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {p}
+              {p + 1}
             </button>
           ))}
           <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
+            onClick={() => goToPage(page + 1)}
+            disabled={page === totalPages - 1}
             className="px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30"
           >
             다음
