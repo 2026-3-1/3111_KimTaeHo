@@ -6,17 +6,8 @@ import type {
   Review,
 } from "../types";
 
-export type CourseParams = {
-  keyword?: string;
-  category?: string;
-  level?: string;
-  sort?: string;
-  page?: number;
-  size?: number;
-};
-
 export const getCourses = async (
-  params: CourseParams,
+  params: Record<string, unknown>,
 ): Promise<CoursePageResponse> => {
   const { data } = await api.get("/courses", { params });
   return data;
