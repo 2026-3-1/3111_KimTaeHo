@@ -13,16 +13,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   algorithm: "from-violet-500 to-indigo-500",
 };
 
-const LEVEL_LABEL: Record<string, string> = {
-  BEGINNER: "초급",
-  INTERMEDIATE: "중급",
-  ADVANCED: "고급",
-};
-
 const LEVEL_COLOR: Record<string, string> = {
-  BEGINNER: "bg-green-100 text-green-700",
-  INTERMEDIATE: "bg-orange-100 text-orange-700",
-  ADVANCED: "bg-red-100 text-red-700",
+  입문: "bg-blue-100 text-blue-700",
+  초급: "bg-green-100 text-green-700",
+  중급: "bg-orange-100 text-orange-700",
+  고급: "bg-red-100 text-red-700",
 };
 
 function getColor(category: string) {
@@ -33,7 +28,7 @@ export default function CourseCard({ course }: Props) {
   const navigate = useNavigate();
   const gradient = getColor(course.category);
   const levelClass = LEVEL_COLOR[course.level] ?? "bg-gray-100 text-gray-600";
-  const levelLabel = LEVEL_LABEL[course.level] ?? course.level;
+  const levelLabel = course.level;
 
   return (
     <div
@@ -42,7 +37,7 @@ export default function CourseCard({ course }: Props) {
     >
       {/* 상단 컬러 배너 */}
       <div
-        className={`bg-gradient-to-br ${gradient} h-28 flex items-center justify-center flex-shrink-0`}
+        className={`bg-linear-to-br ${gradient} h-28 flex items-center justify-center shrink-0`}
       >
         <span className="text-4xl font-black text-white opacity-80">
           {course.title.charAt(0)}
