@@ -16,38 +16,31 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `enrollments`
+-- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `enrollments`;
+DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `enrollments` (
+CREATE TABLE `users` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `course_id` bigint NOT NULL,
-  `total_progress` int NOT NULL DEFAULT '0' COMMENT '전체 진행률 0~100',
-  `last_watched_lecture_id` bigint DEFAULT NULL COMMENT '마지막 시청 강의 ID',
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` varchar(20) NOT NULL COMMENT 'STUDENT / TEACHER',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_enrollment` (`user_id`,`course_id`),
-  KEY `idx_enrollments_user_id` (`user_id`),
-  KEY `idx_enrollments_course_id` (`course_id`),
-  KEY `fk_enrollments_lecture` (`last_watched_lecture_id`),
-  CONSTRAINT `fk_enrollments_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`),
-  CONSTRAINT `fk_enrollments_lecture` FOREIGN KEY (`last_watched_lecture_id`) REFERENCES `lectures` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_enrollments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `chk_enrollment_progress` CHECK ((`total_progress` between 0 and 100))
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `uq_users_email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `enrollments`
+-- Dumping data for table `users`
 --
 
-LOCK TABLES `enrollments` WRITE;
-/*!40000 ALTER TABLE `enrollments` DISABLE KEYS */;
-INSERT INTO `enrollments` VALUES (1,3,1,40,2),(2,3,2,25,7),(3,4,1,100,5),(4,4,3,33,10),(5,3,3,0,NULL);
-/*!40000 ALTER TABLE `enrollments` ENABLE KEYS */;
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'teacher1@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(2,'teacher2@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(3,'student1@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(4,'student2@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(5,'student3@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(6,'test@devclass.com','$2a$10$YLGgI9YjlHuf6wbTsEIqIed1ywLiTYj6vtv5ZzB8arwhJQct3q6zW','STUDENT','2026-03-17 23:27:19');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -59,4 +52,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-22 23:15:31
+-- Dump completed on 2026-03-24  9:05:25
