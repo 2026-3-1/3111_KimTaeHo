@@ -31,6 +31,7 @@ export type CourseDetail = {
 };
 
 export type Lecture = {
+  // 강의에 포함된 각 강좌(lecture)
   id: number;
   title: string;
   videoUrl: string;
@@ -38,6 +39,7 @@ export type Lecture = {
 };
 
 export type Review = {
+  // 강의에 대한 리뷰
   reviewId: number;
   courseId: number;
   userId: number;
