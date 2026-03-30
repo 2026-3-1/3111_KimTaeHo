@@ -4,10 +4,11 @@ import type {
   CourseDetail,
   Lecture,
   Review,
+  MyEnrollment,
 } from "../types";
 
 export const getCourses = async (
-  params: Record<string, unknown>,
+  params: Record<string, string>,
 ): Promise<CoursePageResponse> => {
   const { data } = await api.get("/courses", { params });
   return data;
@@ -25,5 +26,19 @@ export const getLectures = async (courseId: number): Promise<Lecture[]> => {
 
 export const getReviews = async (courseId: number): Promise<Review[]> => {
   const { data } = await api.get("/reviews", { params: { courseId } });
+  return data;
+};
+
+export const enroll = async (
+  userId: number,
+  courseId: number,
+): Promise<void> => {
+  await api.post("/enrollments", { userId, courseId });
+};
+
+export const getMyEnrollments = async (
+  userId: number,
+): Promise<MyEnrollment[]> => {
+  const { data } = await api.get("/enrollments/my", { params: { userId } });
   return data;
 };

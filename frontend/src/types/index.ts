@@ -48,3 +48,14 @@ export type Review = {
   comment: string;
   createdAt: string;
 };
+
+export type MyEnrollment = {
+  // 사용자가 수강 중인 강의 정보
+  enrollmentId: number;
+  courseId: number;
+  courseTitle: string;
+  coursePrice: number;
+  teacherName: string;
+  totalProgress: number;
+  lastWatchedLectureTitle: string | null;
+};

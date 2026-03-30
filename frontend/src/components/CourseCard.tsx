@@ -5,81 +5,89 @@ interface Props {
   course: Course;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  frontend: "from-indigo-500 to-purple-500",
-  backend: "from-blue-500 to-cyan-500",
-  database: "from-emerald-500 to-teal-500",
-  devops: "from-orange-500 to-rose-500",
-  algorithm: "from-violet-500 to-indigo-500",
+const CATEGORY_META: Record<
+  string,
+  { emoji: string; label: string; accent: string }
+> = {
+  프론트엔드: { emoji: "⚛️", label: "프론트엔드", accent: "text-blue-400" },
+  백엔드: { emoji: "⚙️", label: "백엔드", accent: "text-green-400" },
+  데이터사이언스: {
+    emoji: "📊",
+    label: "데이터사이언스",
+    accent: "text-purple-400",
+  },
+  "DevOps / 인프라": {
+    emoji: "🚀",
+    label: "DevOps / 인프라",
+    accent: "text-orange-400",
+  },
+  "알고리즘 / CS 기초": {
+    emoji: "🧠",
+    label: "알고리즘 / CS 기초",
+    accent: "text-pink-400",
+  },
+  모바일: { emoji: "📱", label: "모바일", accent: "text-teal-400" },
 };
 
-const LEVEL_COLOR: Record<string, string> = {
-  입문: "bg-blue-100 text-blue-700",
-  초급: "bg-green-100 text-green-700",
-  중급: "bg-orange-100 text-orange-700",
-  고급: "bg-red-100 text-red-700",
+const LEVEL_META: Record<string, { label: string; color: string }> = {
+  BEGINNER: { label: "초급", color: "text-emerald-400 bg-emerald-400/10" },
+  INTERMEDIATE: { label: "중급", color: "text-amber-400 bg-amber-400/10" },
+  ADVANCED: { label: "고급", color: "text-red-400 bg-red-400/10" },
 };
-
-function getColor(category: string) {
-  return CATEGORY_COLORS[category] ?? "from-gray-400 to-gray-500";
-}
 
 export default function CourseCard({ course }: Props) {
   const navigate = useNavigate();
-  const gradient = getColor(course.category);
-  const levelClass = LEVEL_COLOR[course.level] ?? "bg-gray-100 text-gray-600";
-  const levelLabel = course.level;
+  const meta = CATEGORY_META[course.category] ?? {
+    emoji: "📚",
+    label: course.category,
+    accent: "text-zinc-400",
+  };
+  const level = LEVEL_META[course.level] ?? {
+    label: course.level,
+    color: "text-zinc-400 bg-zinc-400/10",
+  };
 
   return (
     <div
       onClick={() => navigate(`/courses/${course.id}`)}
-      className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-gray-100 hover:-translate-y-1 flex flex-col"
+      className="group bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-600 transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
     >
-      {/* 상단 컬러 배너 */}
-      <div
-        className={`bg-linear-to-br ${gradient} h-28 flex items-center justify-center shrink-0`}
-      >
-        <span className="text-4xl font-black text-white opacity-80">
-          {course.title.charAt(0)}
+      {/* 썸네일 */}
+      <div className="relative h-40 bg-zinc-800 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
+        <span className="relative text-5xl">{meta.emoji}</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent" />
+        <span
+          className={`absolute top-3 left-3 text-xs font-bold px-2 py-1 rounded-md bg-zinc-900/70 backdrop-blur-sm ${meta.accent}`}
+        >
+          {meta.label}
         </span>
       </div>
 
       {/* 본문 */}
       <div className="p-4 flex flex-col flex-1">
-        {/* 카테고리 + 난이도 배지 */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-xs text-gray-400">{course.category}</span>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelClass}`}
-          >
-            {levelLabel}
-          </span>
-        </div>
+        <span
+          className={`self-start text-xs font-semibold px-2 py-0.5 rounded-md mb-2 ${level.color}`}
+        >
+          {level.label}
+        </span>
 
-        {/* 제목 */}
-        <h2 className="text-sm font-bold text-gray-800 mb-1 line-clamp-2 leading-snug flex-1">
+        <h2 className="text-sm font-bold text-white mb-2 line-clamp-2 leading-snug flex-1 group-hover:text-orange-400 transition-colors">
           {course.title}
         </h2>
 
-        {/* 강사 */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
-            {course.teacherName.charAt(0).toUpperCase()}
-          </div>
-          <span className="text-xs text-gray-400 truncate">
-            {course.teacherName}
-          </span>
-        </div>
+        <p className="text-xs text-zinc-500 mb-3 truncate">
+          {course.teacherName}
+        </p>
 
-        {/* 평점 + 가격 */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-3 border-t border-zinc-800">
           <div className="flex items-center gap-1">
-            <span className="text-yellow-400 text-xs">★</span>
-            <span className="text-xs font-semibold text-gray-700">
+            <span className="text-orange-400 text-xs">★</span>
+            <span className="text-xs font-bold text-zinc-300">
               {Number(course.averageRating).toFixed(1)}
             </span>
           </div>
-          <span className="text-sm font-bold text-indigo-600">
+          <span className="text-sm font-black text-white">
             {course.price === 0 ? "무료" : `${course.price.toLocaleString()}원`}
           </span>
         </div>
