@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getCourse, getLectures, getReviews, enroll } from "../api/course";
-import type { CourseDetail, Lecture, Review } from "../types";
+import { getCourse, getLectures, getReviews, enroll, getMyEnrollments } from "../api/course";
+import type { CourseDetail, Lecture, Review, MyEnrollment } from "../types";
 import ReviewItem from "../components/ReviewItem";
-
-const TEMP_USER_ID = 4;
+import ReviewForm from "../components/ReviewForm";
+import { useAuth } from "../context/AuthContext";
 
 const CATEGORY_META: Record<string, { emoji: string; label: string }> = {
   frontend: { emoji: "⚛️", label: "Frontend" },
@@ -43,14 +43,17 @@ function SkeletonDetail() {
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const { user, isLoggedIn } = useAuth();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [myEnrollment, setMyEnrollment] = useState<MyEnrollment | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
   const [enrollError, setEnrollError] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   useEffect(() => {
     if (!courseId) return;
@@ -58,14 +61,25 @@ export default function CourseDetailPage() {
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const [courseData, lectureData, reviewData] = await Promise.all([
+        const promises: Promise<any>[] = [
           getCourse(id),
           getLectures(id),
           getReviews(id),
-        ]);
-        setCourse(courseData);
-        setLectures(lectureData);
-        setReviews(reviewData);
+        ];
+        if (isLoggedIn && user) {
+          promises.push(getMyEnrollments(user.id));
+        }
+        const results = await Promise.all(promises);
+        setCourse(results[0] as CourseDetail);
+        setLectures(results[1] as Lecture[]);
+        setReviews(results[2] as Review[]);
+        if (isLoggedIn && user && results[3]) {
+          const found = (results[3] as MyEnrollment[]).find((e) => e.courseId === id);
+          if (found) {
+            setMyEnrollment(found);
+            setEnrolled(true);
+          }
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -73,14 +87,18 @@ export default function CourseDetailPage() {
       }
     };
     fetchAll();
-  }, [courseId]);
+  }, [courseId, isLoggedIn, user]);
 
   const handleEnroll = async () => {
     if (!courseId) return;
+    if (!isLoggedIn) {
+      navigate("/login", { state: { from: `/courses/${courseId}` } });
+      return;
+    }
     setEnrolling(true);
     setEnrollError("");
     try {
-      await enroll(TEMP_USER_ID, Number(courseId));
+      await enroll(user!.id, Number(courseId));
       setEnrolled(true);
     } catch (e: any) {
       setEnrollError(
@@ -113,6 +131,8 @@ export default function CourseDetailPage() {
     color: "text-zinc-400 bg-zinc-400/10",
   };
 
+  const enrollmentId = myEnrollment?.enrollmentId ?? null;
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* 뒤로가기 */}
@@ -129,10 +149,10 @@ export default function CourseDetailPage() {
       {/* 강의 헤더 */}
       <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden mb-5">
         {/* 썸네일 배너 */}
-        <div className="h-48 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent" />
+        <div className="h-48 bg-linear-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent" />
           <span className="text-8xl">{catMeta.emoji}</span>
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-zinc-900/80 to-transparent" />
           <div className="absolute bottom-4 left-6 flex items-center gap-2">
             <span
               className={`text-xs font-bold px-2.5 py-1 rounded-lg ${level.color}`}
@@ -197,13 +217,25 @@ export default function CourseDetailPage() {
               {enrolled ? (
                 <div className="flex items-center gap-3">
                   <span className="text-emerald-400 text-sm font-bold">
-                    ✓ 수강 신청 완료
+                    ✓ 수강 중
                   </span>
+                  {enrollmentId && (
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/courses/${courseId}/watch?lectureId=${lectures[0]?.id ?? ""}`,
+                        )
+                      }
+                      className="text-sm font-bold text-white bg-orange-500 hover:bg-orange-400 px-5 py-2.5 rounded-xl transition-colors"
+                    >
+                      강의 보기 →
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate("/my")}
                     className="text-sm font-bold text-orange-400 border border-orange-500/30 px-5 py-2.5 rounded-xl hover:bg-orange-500/10 transition-colors"
                   >
-                    내 강의 보기 →
+                    내 강의 →
                   </button>
                 </div>
               ) : (
@@ -212,7 +244,11 @@ export default function CourseDetailPage() {
                   disabled={enrolling}
                   className="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                 >
-                  {enrolling ? "신청 중..." : "수강 신청하기"}
+                  {enrolling
+                    ? "신청 중..."
+                    : isLoggedIn
+                      ? "수강 신청하기"
+                      : "로그인 후 수강 신청"}
                 </button>
               )}
               {enrollError && (
@@ -242,7 +278,14 @@ export default function CourseDetailPage() {
             {lectures.map((lecture, index) => (
               <div
                 key={lecture.id}
-                className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-zinc-800 transition-colors group"
+                onClick={() =>
+                  enrolled
+                    ? navigate(`/courses/${courseId}/watch?lectureId=${lecture.id}`)
+                    : undefined
+                }
+                className={`flex items-center justify-between py-3 px-3 rounded-xl transition-colors group ${
+                  enrolled ? "cursor-pointer hover:bg-zinc-800" : ""
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-400 text-xs font-black flex items-center justify-center shrink-0 group-hover:bg-orange-500/10 group-hover:text-orange-400 transition-colors border border-zinc-700">
@@ -252,9 +295,16 @@ export default function CourseDetailPage() {
                     {lecture.title}
                   </span>
                 </div>
-                <span className="text-xs text-zinc-600 font-mono bg-zinc-800 px-2 py-0.5 rounded-md border border-zinc-700">
-                  {formatDuration(lecture.duration)}
-                </span>
+                <div className="flex items-center gap-2">
+                  {enrolled && (
+                    <span className="text-xs text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      ▶
+                    </span>
+                  )}
+                  <span className="text-xs text-zinc-600 font-mono bg-zinc-800 px-2 py-0.5 rounded-md border border-zinc-700">
+                    {formatDuration(lecture.duration)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -278,6 +328,26 @@ export default function CourseDetailPage() {
             {reviews.map((review) => (
               <ReviewItem key={review.reviewId} review={review} />
             ))}
+          </div>
+        )}
+
+        {/* 리뷰 작성 폼: 수강 중이고 아직 제출 안 한 경우 */}
+        {enrolled && !reviewSubmitted && (
+          <ReviewForm
+            courseId={course.id}
+            onSuccess={() => {
+              setReviewSubmitted(true);
+              getReviews(course.id)
+                .then(setReviews)
+                .catch(console.error);
+            }}
+          />
+        )}
+        {enrolled && reviewSubmitted && (
+          <div className="mt-6 pt-6 border-t border-zinc-800">
+            <p className="text-emerald-400 text-sm font-bold">
+              ✓ 리뷰가 등록되었습니다. 감사합니다!
+            </p>
           </div>
         )}
       </div>

@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyEnrollments } from "../api/course";
 import type { MyEnrollment } from "../types";
-
-const TEMP_USER_ID = 4;
+import { useAuth } from "../context/AuthContext";
 
 function getProgressColor(p: number) {
   if (p === 100) return "#10b981";
-  if (p >= 50) return "#f97316";
   if (p > 0) return "#f97316";
   return "#3f3f46";
 }
@@ -31,14 +29,16 @@ function getStatusMeta(p: number) {
 
 export default function MyEnrollmentsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<MyEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
     const fetch = async () => {
       setLoading(true);
       try {
-        const data = await getMyEnrollments(TEMP_USER_ID);
+        const data = await getMyEnrollments(user.id);
         setEnrollments(data);
       } catch (e) {
         console.error(e);
@@ -47,7 +47,7 @@ export default function MyEnrollmentsPage() {
       }
     };
     fetch();
-  }, []);
+  }, [user]);
 
   return (
     <div>
@@ -93,8 +93,7 @@ export default function MyEnrollmentsPage() {
             return (
               <div
                 key={enrollment.enrollmentId}
-                onClick={() => navigate(`/courses/${enrollment.courseId}`)}
-                className="group bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-zinc-600 p-6 cursor-pointer transition-all hover:-translate-y-0.5"
+                className="group bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-zinc-600 p-6 transition-all hover:-translate-y-0.5"
               >
                 <div className="flex items-center gap-5">
                   {/* 원형 진행률 */}
@@ -131,7 +130,12 @@ export default function MyEnrollmentsPage() {
                   {/* 강의 정보 */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-1">
-                      <h2 className="text-sm font-bold text-white truncate group-hover:text-orange-400 transition-colors">
+                      <h2
+                        onClick={() =>
+                          navigate(`/courses/${enrollment.courseId}`)
+                        }
+                        className="text-sm font-bold text-white truncate cursor-pointer hover:text-orange-400 transition-colors"
+                      >
                         {enrollment.courseTitle}
                       </h2>
                       <span
@@ -163,13 +167,18 @@ export default function MyEnrollmentsPage() {
                     )}
                   </div>
 
-                  {/* 가격 */}
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-black text-white">
+                  {/* 액션 버튼 */}
+                  <div className="shrink-0 flex flex-col items-end gap-2">
+                    <button
+                      onClick={() =>
+                        navigate(`/courses/${enrollment.courseId}/watch`)
+                      }
+                      className="text-xs font-bold text-white bg-orange-500 hover:bg-orange-400 px-4 py-2 rounded-xl transition-colors"
+                    >
+                      {enrollment.totalProgress > 0 ? "이어서 보기" : "시작하기"} →
+                    </button>
+                    <p className="text-xs text-zinc-700">
                       {enrollment.coursePrice.toLocaleString()}원
-                    </p>
-                    <p className="text-xs text-zinc-700 mt-0.5 group-hover:text-orange-500 transition-colors">
-                      상세보기 →
                     </p>
                   </div>
                 </div>

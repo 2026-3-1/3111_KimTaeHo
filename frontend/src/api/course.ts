@@ -42,3 +42,19 @@ export const getMyEnrollments = async (
   const { data } = await api.get("/enrollments/my", { params: { userId } });
   return data;
 };
+
+export const updateProgress = async (
+  enrollmentId: number,
+  body: { lastWatchedLectureId: number; currentProgress: number },
+): Promise<void> => {
+  await api.patch(`/enrollments/${enrollmentId}/progress`, body);
+};
+
+export const postReview = async (body: {
+  courseId: number;
+  userId: number;
+  rating: number;
+  comment: string;
+}): Promise<void> => {
+  await api.post("/reviews", body);
+};
