@@ -16,31 +16,36 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `users`
+-- Table structure for table `reviews`
 --
 
-DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `reviews`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
+CREATE TABLE `reviews` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` varchar(20) NOT NULL COMMENT 'STUDENT / TEACHER',
+  `user_id` bigint NOT NULL,
+  `course_id` bigint NOT NULL,
+  `rating` int NOT NULL COMMENT '평점 1~5',
+  `comment` text,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_users_email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `idx_reviews_course_id` (`course_id`),
+  KEY `fk_reviews_user` (`user_id`),
+  CONSTRAINT `fk_reviews_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`),
+  CONSTRAINT `fk_reviews_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `chk_review_rating` CHECK ((`rating` between 1 and 5))
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `users`
+-- Dumping data for table `reviews`
 --
 
-LOCK TABLES `users` WRITE;
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'teacher1@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(2,'teacher2@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(3,'student1@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(4,'student2@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(5,'student3@devclass.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(6,'test@devclass.com','$2a$10$YLGgI9YjlHuf6wbTsEIqIed1ywLiTYj6vtv5ZzB8arwhJQct3q6zW','STUDENT','2026-03-17 23:27:19'),(7,'btm.email2769@gmail.com','$2a$10$TvqhDq1eHGo36SZf4FUhDO6mLp6.OADolrFI2y4kajhV/T6WT5llC','STUDENT','2026-04-06 20:17:43');
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+LOCK TABLES `reviews` WRITE;
+/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
+INSERT INTO `reviews` VALUES (2,3,2,4,'Spring Boot 전반을 빠르게 훑을 수 있어 좋았습니다. 심화 내용도 다뤄줬으면 합니다.','2026-03-17 21:54:36'),(3,3,1,5,'정말 좋은 강의입니다!','2026-03-18 22:55:47'),(4,7,27,2,'dd','2026-04-06 20:18:31'),(5,1,27,3,'보통이에요\n','2026-04-06 21:02:17');
+/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -52,4 +57,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-06 21:06:30
+-- Dump completed on 2026-04-10 23:47:26
