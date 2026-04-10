@@ -45,7 +45,7 @@ export const getMyEnrollments = async (
 
 export const updateProgress = async (
   enrollmentId: number,
-  body: { lastWatchedLectureId: number; currentProgress: number },
+  body: { userId: number; lastWatchedLectureId: number; currentProgress: number },
 ): Promise<void> => {
   await api.patch(`/enrollments/${enrollmentId}/progress`, body);
 };

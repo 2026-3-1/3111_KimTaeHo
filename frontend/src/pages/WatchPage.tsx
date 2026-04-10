@@ -8,7 +8,6 @@ import {
 } from "../api/course";
 import type { CourseDetail, Lecture, MyEnrollment } from "../types";
 import { useAuth } from "../context/AuthContext";
-import testVideo from "../assets/test_video.mp4";
 
 function formatDuration(seconds: number) {
   const m = Math.floor(seconds / 60);
@@ -83,6 +82,7 @@ export default function WatchPage() {
       const progress = Math.round(((idx + 1) / lectures.length) * 100);
       try {
         await updateProgress(enrollment.enrollmentId, {
+          userId: user!.id,
           lastWatchedLectureId: lecture.id,
           currentProgress: progress,
         });
@@ -184,13 +184,20 @@ export default function WatchPage() {
           {/* 비디오 플레이어 */}
           <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden mb-4">
             <div className="aspect-video bg-zinc-950">
-              <video
-                key={currentLecture?.id ?? "fallback"}
-                src={testVideo}
-                controls
-                className="w-full h-full"
-                title={currentLecture?.title}
-              />
+              {currentLecture?.videoUrl ? (
+                <iframe
+                  key={currentLecture.id}
+                  src={currentLecture.videoUrl}
+                  className="w-full h-full"
+                  title={currentLecture.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-600 text-sm">
+                  영상이 없습니다
+                </div>
+              )}
             </div>
           </div>
 
