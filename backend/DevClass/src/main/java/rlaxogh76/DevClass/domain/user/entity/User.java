@@ -19,6 +19,18 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Builder.Default
+    @Column(nullable = false, length = 100)
+    private String name = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    public void updateProfile(String name, String bio) {
+        if (name != null && !name.isBlank()) this.name = name;
+        if (bio != null) this.bio = bio;
+    }
+
     @Column(nullable = false)
     private String password;
 

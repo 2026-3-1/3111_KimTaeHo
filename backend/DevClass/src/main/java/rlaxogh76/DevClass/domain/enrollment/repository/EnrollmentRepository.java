@@ -12,9 +12,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     boolean existsByUserIdAndCourseId(Long userId, Long courseId);
 
+    Optional<Enrollment> findByUserIdAndCourseId(Long userId, Long courseId);
+
     Optional<Enrollment> findByIdAndUserId(Long enrollmentId, Long userId);
 
-    // 수강 목록 조회 - course, teacher, lastWatchedLecture 한 번에 fetch (N+1 방지)
     @Query("""
         SELECT e FROM Enrollment e
         JOIN FETCH e.course c
@@ -23,4 +24,24 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
         WHERE e.user.id = :userId
         """)
     List<Enrollment> findAllByUserIdWithDetails(@Param("userId") Long userId);
+
+    @Query("""
+        SELECT e FROM Enrollment e
+        JOIN FETCH e.user u
+        WHERE e.course.id = :courseId
+        """)
+    List<Enrollment> findByCourseIdWithUser(@Param("courseId") Long courseId);
+
+    int countByCourseId(Long courseId);
+
+    void deleteByCourseId(Long courseId);
+
+    @Query("""
+        SELECT DATE(e.enrolledAt), COUNT(e)
+        FROM Enrollment e
+        WHERE e.course.teacher.id = :teacherId
+        GROUP BY DATE(e.enrolledAt)
+        ORDER BY DATE(e.enrolledAt) ASC
+        """)
+    List<Object[]> countDailyEnrollmentsByTeacherId(@Param("teacherId") Long teacherId);
 }

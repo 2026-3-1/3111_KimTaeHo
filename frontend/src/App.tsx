@@ -13,6 +13,10 @@ import MyEnrollmentsPage from "./pages/MyEnrollmentsPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import WatchPage from "./pages/WatchPage";
+import TeacherDashboardPage from "./pages/TeacherDashboardPage";
+import StudentListPage from "./pages/StudentListPage";
+import ProfilePage from "./pages/ProfilePage";
+import CourseEditPage from "./pages/CourseEditPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
@@ -64,7 +68,9 @@ function Header() {
 
         <nav className="flex items-center gap-8">
           {navItem("/", "강의")}
-          {navItem("/my", "내 강의")}
+          {user?.role === "TEACHER"
+            ? navItem("/teacher", "대시보드")
+            : navItem("/my", "내 강의")}
         </nav>
 
         <div className="flex items-center gap-3">
@@ -123,6 +129,46 @@ export default function App() {
                 }
               />
               <Route path="/courses/:courseId/watch" element={<WatchPage />} />
+              <Route
+                path="/teacher"
+                element={
+                  <ProtectedRoute>
+                    <TeacherDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/courses/new"
+                element={
+                  <ProtectedRoute>
+                    <CourseEditPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/courses/:courseId/edit"
+                element={
+                  <ProtectedRoute>
+                    <CourseEditPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/courses/:courseId/students"
+                element={
+                  <ProtectedRoute>
+                    <StudentListPage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
         </div>

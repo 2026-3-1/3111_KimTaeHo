@@ -43,8 +43,11 @@ public class Enrollment {
     private Lecture lastWatchedLecture;
 
     public void updateProgress(Integer progress, Lecture lecture) {
-        this.totalProgress = progress;
-        this.lastWatchedLecture = lecture;
+        // 진행률은 감소하지 않음 — 이미 완료한 강의로 돌아가도 기존 진행률 유지
+        if (progress > this.totalProgress) {
+            this.totalProgress = progress;  //  더 클 때만 업데이트
+        }
+        this.lastWatchedLecture = lecture;  //  위치는 항상 업데이트
     }
 
     @Column(name = "enrolled_at", nullable = false, updatable = false)

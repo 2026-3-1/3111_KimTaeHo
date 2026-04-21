@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getCourse, getLectures, getReviews, enroll, getMyEnrollments } from "../api/course";
+import {
+  getCourse,
+  getLectures,
+  getReviews,
+  enroll,
+  getMyEnrollments,
+} from "../api/course";
 import type { CourseDetail, Lecture, Review, MyEnrollment } from "../types";
 import ReviewItem from "../components/ReviewItem";
 import ReviewForm from "../components/ReviewForm";
@@ -55,6 +61,8 @@ export default function CourseDetailPage() {
   const [enrollError, setEnrollError] = useState("");
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
+  const isTeacher = user?.role === "TEACHER";
+
   useEffect(() => {
     if (!courseId) return;
     const id = Number(courseId);
@@ -66,15 +74,18 @@ export default function CourseDetailPage() {
           getLectures(id),
           getReviews(id),
         ];
-        if (isLoggedIn && user) {
+        // 강사는 수강 목록 조회 불필요
+        if (isLoggedIn && user && !isTeacher) {
           promises.push(getMyEnrollments(user.id));
         }
         const results = await Promise.all(promises);
         setCourse(results[0] as CourseDetail);
         setLectures(results[1] as Lecture[]);
         setReviews(results[2] as Review[]);
-        if (isLoggedIn && user && results[3]) {
-          const found = (results[3] as MyEnrollment[]).find((e) => e.courseId === id);
+        if (isLoggedIn && user && !isTeacher && results[3]) {
+          const found = (results[3] as MyEnrollment[]).find(
+            (e) => e.courseId === id,
+          );
           if (found) {
             setMyEnrollment(found);
             setEnrolled(true);
@@ -214,7 +225,13 @@ export default function CourseDetailPage() {
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              {enrolled ? (
+              {isTeacher ? (
+                /* 강사 계정 — 수강 신청 불가 */
+                <div className="text-sm text-zinc-500 px-4 py-2 rounded-xl border border-zinc-800">
+                  강사 계정은 수강 신청이 불가합니다
+                </div>
+              ) : enrolled ? (
+                /* 이미 수강 중 */
                 <div className="flex items-center gap-3">
                   <span className="text-emerald-400 text-sm font-bold">
                     ✓ 수강 중
@@ -239,6 +256,7 @@ export default function CourseDetailPage() {
                   </button>
                 </div>
               ) : (
+                /* 미수강 — 수강 신청 버튼 */
                 <button
                   onClick={handleEnroll}
                   disabled={enrolling}
@@ -280,7 +298,9 @@ export default function CourseDetailPage() {
                 key={lecture.id}
                 onClick={() =>
                   enrolled
-                    ? navigate(`/courses/${courseId}/watch?lectureId=${lecture.id}`)
+                    ? navigate(
+                        `/courses/${courseId}/watch?lectureId=${lecture.id}`,
+                      )
                     : undefined
                 }
                 className={`flex items-center justify-between py-3 px-3 rounded-xl transition-colors group ${
@@ -331,19 +351,17 @@ export default function CourseDetailPage() {
           </div>
         )}
 
-        {/* 리뷰 작성 폼: 수강 중이고 아직 제출 안 한 경우 */}
-        {enrolled && !reviewSubmitted && (
+        {/* 리뷰 작성 폼: 학생이고 수강 중이며 아직 제출 안 한 경우 */}
+        {!isTeacher && enrolled && !reviewSubmitted && (
           <ReviewForm
             courseId={course.id}
             onSuccess={() => {
               setReviewSubmitted(true);
-              getReviews(course.id)
-                .then(setReviews)
-                .catch(console.error);
+              getReviews(course.id).then(setReviews).catch(console.error);
             }}
           />
         )}
-        {enrolled && reviewSubmitted && (
+        {!isTeacher && enrolled && reviewSubmitted && (
           <div className="mt-6 pt-6 border-t border-zinc-800">
             <p className="text-emerald-400 text-sm font-bold">
               ✓ 리뷰가 등록되었습니다. 감사합니다!

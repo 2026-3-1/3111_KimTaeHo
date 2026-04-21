@@ -10,6 +10,7 @@ import rlaxogh76.DevClass.domain.enrollment.dto.ProgressUpdateRequest;
 import rlaxogh76.DevClass.domain.enrollment.dto.ProgressUpdateResponse;
 import rlaxogh76.DevClass.domain.enrollment.entity.Enrollment;
 import rlaxogh76.DevClass.domain.enrollment.repository.EnrollmentRepository;
+import rlaxogh76.DevClass.domain.user.entity.User;
 import rlaxogh76.DevClass.domain.user.repository.UserRepository;
 import rlaxogh76.DevClass.global.exception.BusinessException;
 import rlaxogh76.DevClass.global.exception.ErrorCode;
@@ -33,6 +34,12 @@ public class EnrollmentService {
         Long userId = request.userId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // TEACHER는 수강 신청 불가
+        if (user.getRole() == User.Role.TEACHER) {
+            throw new BusinessException(ErrorCode.NOT_STUDENT);
+        }
+
         var course = courseRepository.findById(request.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
         if (enrollmentRepository.existsByUserIdAndCourseId(userId, request.courseId())) {

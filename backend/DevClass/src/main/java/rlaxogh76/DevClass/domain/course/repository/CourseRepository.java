@@ -8,9 +8,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface CourseRepository
         extends JpaRepository<Course, Long>,
-        JpaSpecificationExecutor<Course> {   // 추가
+        JpaSpecificationExecutor<Course> {
 
     @Query(
             value = """
@@ -56,4 +58,15 @@ public interface CourseRepository
             @Param("level")    String level,
             Pageable pageable
     );
+
+    // 강사별 강의 목록 (lectures fetch join으로 N+1 방지)
+    @Query("""
+        SELECT DISTINCT c FROM Course c
+        LEFT JOIN FETCH c.lectures
+        WHERE c.teacher.id = :teacherId
+        ORDER BY c.createdAt DESC
+        """)
+    List<Course> findByTeacherIdOrderByCreatedAtDesc(@Param("teacherId") Long teacherId);
+
+    boolean existsByIdAndTeacherId(Long courseId, Long teacherId);
 }

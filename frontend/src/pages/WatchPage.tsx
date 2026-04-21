@@ -79,7 +79,12 @@ export default function WatchPage() {
       setSearchParams({ lectureId: String(lecture.id) });
       if (!enrollment) return;
       const idx = lectures.findIndex((l) => l.id === lecture.id);
-      const progress = Math.round(((idx + 1) / lectures.length) * 100);
+
+      const newProgress = ((idx + 1) / lectures.length) * 100;
+
+      const progress = Math.floor(
+        Math.max(enrollment.totalProgress, newProgress),
+      );
       try {
         await updateProgress(enrollment.enrollmentId, {
           userId: user!.id,
@@ -231,7 +236,9 @@ export default function WatchPage() {
                 </button>
                 <button
                   onClick={handleNext}
-                  disabled={!lectures.length || currentIndex === lectures.length - 1}
+                  disabled={
+                    !lectures.length || currentIndex === lectures.length - 1
+                  }
                   className="text-sm font-bold px-4 py-2 rounded-xl bg-orange-500 text-white hover:bg-orange-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   다음 →

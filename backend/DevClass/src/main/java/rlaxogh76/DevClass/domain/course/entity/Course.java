@@ -69,6 +69,14 @@ public class Course {
         if (this.enrollmentCount > 0) this.enrollmentCount--;
     }
 
+    public void update(String title, String description, Integer price, String category, String level) {
+        if (title != null && !title.isBlank()) this.title = title;
+        if (description != null) this.description = description;
+        if (price != null) this.price = price;
+        if (category != null && !category.isBlank()) this.category = category;
+        if (level != null && !level.isBlank()) this.level = level;
+    }
+
     public void updateAverageRating(BigDecimal averageRating) {
         this.averageRating = averageRating;
     }
