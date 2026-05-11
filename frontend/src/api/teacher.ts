@@ -1,4 +1,5 @@
 import api from "./axios";
+import type { Review } from "../types";
 
 export type TeacherCourse = {
   id: number;
@@ -154,7 +155,9 @@ export const getCourseStudents = async (
   return data;
 };
 
-export const getCourseReviewsTeacher = async (courseId: number) => {
+export const getCourseReviewsTeacher = async (
+  courseId: number,
+): Promise<Review[]> => {
   const { data } = await api.get(`/teacher/courses/${courseId}/reviews`);
   return data;
 };

@@ -7,7 +7,6 @@ import {
   addLecture,
   deleteLecture,
 } from "../api/teacher";
-import type { TeacherLecture } from "../api/teacher";
 
 const CATEGORIES = [
   "프론트엔드",

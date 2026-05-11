@@ -4,13 +4,13 @@ import {
   getCourse,
   getLectures,
   getReviews,
-  enroll,
   getMyEnrollments,
 } from "../api/course";
 import type { CourseDetail, Lecture, Review, MyEnrollment } from "../types";
 import ReviewItem from "../components/ReviewItem";
 import ReviewForm from "../components/ReviewForm";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 const CATEGORY_META: Record<string, { emoji: string; label: string }> = {
   frontend: { emoji: "⚛️", label: "Frontend" },
@@ -50,15 +50,15 @@ export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
+  const { addToCart, isInCart } = useCart();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [myEnrollment, setMyEnrollment] = useState<MyEnrollment | null>(null);
   const [loading, setLoading] = useState(true);
-  const [enrolling, setEnrolling] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
-  const [enrollError, setEnrollError] = useState("");
+  const [cartMessage, setCartMessage] = useState("");
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   const isTeacher = user?.role === "TEACHER";
@@ -100,26 +100,18 @@ export default function CourseDetailPage() {
     fetchAll();
   }, [courseId, isLoggedIn, user]);
 
-  const handleEnroll = async () => {
+  const handleAddToCart = async () => {
     if (!courseId) return;
     if (!isLoggedIn) {
       navigate("/login", { state: { from: `/courses/${courseId}` } });
       return;
     }
-    setEnrolling(true);
-    setEnrollError("");
-    try {
-      await enroll(user!.id, Number(courseId));
-      setEnrolled(true);
-    } catch (e: any) {
-      setEnrollError(
-        e.response?.status === 409
-          ? "이미 수강 중인 강의입니다."
-          : "수강 신청에 실패했습니다.",
-      );
-    } finally {
-      setEnrolling(false);
+    const result = await addToCart(Number(courseId));
+    if (result.added) {
+      setCartMessage("장바구니에 담았습니다.");
+      return;
     }
+    setCartMessage(result.message ?? "장바구니 담기에 실패했습니다.");
   };
 
   if (loading) return <SkeletonDetail />;
@@ -256,22 +248,28 @@ export default function CourseDetailPage() {
                   </button>
                 </div>
               ) : (
-                /* 미수강 — 수강 신청 버튼 */
-                <button
-                  onClick={handleEnroll}
-                  disabled={enrolling}
-                  className="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-                >
-                  {enrolling
-                    ? "신청 중..."
-                    : isLoggedIn
-                      ? "수강 신청하기"
-                      : "로그인 후 수강 신청"}
-                </button>
+                /* 미수강 — 장바구니 담기 */
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isInCart(course.id)}
+                    className="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                  >
+                    {isInCart(course.id) ? "장바구니 담김" : isLoggedIn ? "장바구니 담기" : "로그인 후 수강 신청"}
+                  </button>
+                  {isInCart(course.id) && (
+                    <button
+                      onClick={() => navigate("/cart")}
+                      className="border border-orange-500/50 text-orange-400 px-5 py-3 rounded-xl font-bold text-sm hover:bg-orange-500/10 transition-colors"
+                    >
+                      장바구니로 이동 →
+                    </button>
+                  )}
+                </div>
               )}
-              {enrollError && (
-                <p className="text-red-400 text-xs font-medium">
-                  {enrollError}
+              {cartMessage && (
+                <p className="text-emerald-400 text-xs font-medium">
+                  {cartMessage}
                 </p>
               )}
             </div>

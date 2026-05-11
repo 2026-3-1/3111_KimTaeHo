@@ -23,6 +23,9 @@ jwt:
   secret: devclass-secret-key-must-be-at-least-256-bits-long-for-hs256
   expiration-ms: 86400000    # 24??
 
+toss:
+  secret-key: test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R
+
 server:
   port: 8080
 

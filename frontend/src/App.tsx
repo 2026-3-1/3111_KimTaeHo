@@ -17,6 +17,10 @@ import TeacherDashboardPage from "./pages/TeacherDashboardPage";
 import StudentListPage from "./pages/StudentListPage";
 import ProfilePage from "./pages/ProfilePage";
 import CourseEditPage from "./pages/CourseEditPage";
+import CartPage from "./pages/CartPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentFailPage from "./pages/PaymentFailPage";
+import { CartProvider, useCart } from "./context/CartContext";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
@@ -31,6 +35,7 @@ function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isLoggedIn, logout } = useAuth();
+  const { count } = useCart();
 
   const navItem = (path: string, label: string) => {
     const active = location.pathname === path;
@@ -71,6 +76,23 @@ function Header() {
           {user?.role === "TEACHER"
             ? navItem("/teacher", "대시보드")
             : navItem("/my", "내 강의")}
+          {user?.role === "STUDENT" && (
+            <button
+              onClick={() => navigate("/cart")}
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === "/cart"
+                  ? "text-white"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              장바구니
+              {count > 0 && (
+                <span className="ml-2 text-[10px] font-black text-black bg-orange-400 rounded-full px-1.5 py-0.5">
+                  {count}
+                </span>
+              )}
+            </button>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
@@ -112,66 +134,84 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen bg-zinc-950 text-white">
-          <Header />
-          <main className="max-w-6xl mx-auto px-6 py-10">
-            <Routes>
-              <Route path="/" element={<CourseListPage />} />
-              <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route
-                path="/my"
-                element={
-                  <ProtectedRoute>
-                    <MyEnrollmentsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/courses/:courseId/watch" element={<WatchPage />} />
-              <Route
-                path="/teacher"
-                element={
-                  <ProtectedRoute>
-                    <TeacherDashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/teacher/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/teacher/courses/new"
-                element={
-                  <ProtectedRoute>
-                    <CourseEditPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/teacher/courses/:courseId/edit"
-                element={
-                  <ProtectedRoute>
-                    <CourseEditPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/teacher/courses/:courseId/students"
-                element={
-                  <ProtectedRoute>
-                    <StudentListPage />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </main>
-        </div>
+        <CartProvider>
+          <div className="min-h-screen bg-zinc-950 text-white">
+            <Header />
+            <main className="max-w-6xl mx-auto px-6 py-10">
+              <Routes>
+                <Route path="/" element={<CourseListPage />} />
+                <Route
+                  path="/courses/:courseId"
+                  element={<CourseDetailPage />}
+                />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route
+                  path="/my"
+                  element={
+                    <ProtectedRoute>
+                      <MyEnrollmentsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cart"
+                  element={
+                    <ProtectedRoute>
+                      <CartPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/payment/success" element={<PaymentSuccessPage />} />
+                <Route path="/payment/fail" element={<PaymentFailPage />} />
+                <Route
+                  path="/courses/:courseId/watch"
+                  element={<WatchPage />}
+                />
+                <Route
+                  path="/teacher"
+                  element={
+                    <ProtectedRoute>
+                      <TeacherDashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/courses/new"
+                  element={
+                    <ProtectedRoute>
+                      <CourseEditPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/courses/:courseId/edit"
+                  element={
+                    <ProtectedRoute>
+                      <CourseEditPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/courses/:courseId/students"
+                  element={
+                    <ProtectedRoute>
+                      <StudentListPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </main>
+          </div>
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -21,7 +21,13 @@ public enum ErrorCode {
     COURSE_NOT_OWNED("본인의 강의만 수정/삭제할 수 있습니다.", HttpStatus.FORBIDDEN),
     LECTURE_NOT_FOUND_IN_COURSE("해당 강의에 속한 영상을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     REVIEW_PROGRESS_INSUFFICIENT("강의를 80% 이상 수강한 후 리뷰를 작성할 수 있습니다.", HttpStatus.FORBIDDEN),
-    NOT_STUDENT("학생만 수강 신청할 수 있습니다.", HttpStatus.FORBIDDEN);
+    NOT_STUDENT("학생만 수강 신청할 수 있습니다.", HttpStatus.FORBIDDEN),
+    CART_ALREADY_EXISTS("이미 장바구니에 담긴 강의입니다.", HttpStatus.CONFLICT),
+    CART_ITEM_NOT_FOUND("장바구니 항목을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    CART_EMPTY("장바구니가 비어 있습니다.", HttpStatus.BAD_REQUEST),
+    PAYMENT_NOT_FOUND("결제 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    PAYMENT_AMOUNT_MISMATCH("결제 금액이 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    PAYMENT_CONFIRM_FAILED("결제 승인에 실패했습니다.", HttpStatus.BAD_GATEWAY);
 
     private final String message;
     private final HttpStatus status;
