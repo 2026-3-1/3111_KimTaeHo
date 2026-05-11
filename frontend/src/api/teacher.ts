@@ -8,6 +8,7 @@ export type TeacherCourse = {
   price: number;
   category: string;
   level: string;
+  coverImageUrl?: string | null;
   averageRating: number;
   enrollmentCount: number;
   createdAt: string;
@@ -59,6 +60,7 @@ export type CourseCreateBody = {
   price: number;
   category: string;
   level: string;
+  coverImageUrl?: string;
   lectures?: {
     title: string;
     videoUrl: string;
@@ -68,6 +70,10 @@ export type CourseCreateBody = {
 };
 
 export type CourseUpdateBody = Partial<Omit<CourseCreateBody, "lectures">>;
+
+export type LectureUpdateBody = {
+  sequence: number;
+};
 
 export type LectureAddBody = {
   title: string;
@@ -126,6 +132,18 @@ export const addLecture = async (
 ): Promise<TeacherLecture> => {
   const { data } = await api.post(
     `/teacher/courses/${courseId}/lectures`,
+    body,
+  );
+  return data;
+};
+
+export const updateLecture = async (
+  courseId: number,
+  lectureId: number,
+  body: LectureUpdateBody,
+): Promise<TeacherLecture> => {
+  const { data } = await api.patch(
+    `/teacher/courses/${courseId}/lectures/${lectureId}`,
     body,
   );
   return data;

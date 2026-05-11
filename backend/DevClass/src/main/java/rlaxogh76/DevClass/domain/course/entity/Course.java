@@ -37,6 +37,9 @@ public class Course {
     @Column(nullable = false, length = 20)
     private String level;
 
+    @Column(name = "cover_image_url", length = 500)
+    private String coverImageUrl;
+
     @Builder.Default
     @Column(name = "average_rating", nullable = false, precision = 3, scale = 2)
     private BigDecimal averageRating = BigDecimal.ZERO;
@@ -69,12 +72,13 @@ public class Course {
         if (this.enrollmentCount > 0) this.enrollmentCount--;
     }
 
-    public void update(String title, String description, Integer price, String category, String level) {
+    public void update(String title, String description, Integer price, String category, String level, String coverImageUrl) {
         if (title != null && !title.isBlank()) this.title = title;
         if (description != null) this.description = description;
         if (price != null) this.price = price;
         if (category != null && !category.isBlank()) this.category = category;
         if (level != null && !level.isBlank()) this.level = level;
+        if (coverImageUrl != null) this.coverImageUrl = coverImageUrl;
     }
 
     public void updateAverageRating(BigDecimal averageRating) {

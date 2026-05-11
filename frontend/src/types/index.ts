@@ -6,7 +6,8 @@ export type Course = {
   teacherName: string;
   category: string;
   level: string;
-  averageRating: number; // rating, avarageRating 제거 후 통일
+  coverImageUrl?: string | null;
+  averageRating: number;
 };
 
 export type CoursePageResponse = {
@@ -25,6 +26,7 @@ export type CourseDetail = {
   teacherName: string;
   category: string;
   level: string;
+  coverImageUrl?: string | null;
   lectureCount: number;
   averageRating: number;
   reviewCount: number;

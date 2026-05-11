@@ -5,6 +5,7 @@ import {
   updateCourse,
   getTeacherCourse,
   addLecture,
+  updateLecture,
   deleteLecture,
 } from "../api/teacher";
 
@@ -36,6 +37,7 @@ export default function CourseEditPage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [level, setLevel] = useState(LEVELS[0]);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
 
   const [lectures, setLectures] = useState<LectureForm[]>([]);
   const [newLecture, setNewLecture] = useState<LectureForm>({
@@ -59,6 +61,7 @@ export default function CourseEditPage() {
         setPrice(String(course.price));
         setCategory(course.category);
         setLevel(course.level);
+        setCoverImageUrl(course.coverImageUrl ?? "");
         setLectures(
           course.lectures.map((l) => ({
             id: l.id,
@@ -87,6 +90,7 @@ export default function CourseEditPage() {
           price: Number(price),
           category,
           level,
+          coverImageUrl: coverImageUrl || undefined,
         });
         alert("강의 정보가 수정되었습니다.");
       } else {
@@ -96,6 +100,7 @@ export default function CourseEditPage() {
           price: Number(price),
           category,
           level,
+          coverImageUrl: coverImageUrl || undefined,
           lectures: lectures.map((l) => ({
             title: l.title,
             videoUrl: l.videoUrl,
@@ -162,6 +167,31 @@ export default function CourseEditPage() {
     setLectures((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleMoveLecture = async (index: number, direction: "up" | "down") => {
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= lectures.length) return;
+
+    const updated = [...lectures];
+    [updated[index], updated[swapIndex]] = [updated[swapIndex], updated[index]];
+    // sequence를 1-based 인덱스 순서로 재할당
+    const resequenced = updated.map((l, i) => ({ ...l, sequence: String(i + 1) }));
+    setLectures(resequenced);
+
+    if (isEdit) {
+      try {
+        // 두 영상의 sequence를 서버에 반영
+        const a = resequenced[index];
+        const b = resequenced[swapIndex];
+        await Promise.all([
+          a.id ? updateLecture(Number(courseId), a.id, { sequence: Number(a.sequence) }) : Promise.resolve(),
+          b.id ? updateLecture(Number(courseId), b.id, { sequence: Number(b.sequence) }) : Promise.resolve(),
+        ]);
+      } catch (e: any) {
+        setError(e.response?.data?.message || "순서 변경 실패");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -215,6 +245,26 @@ export default function CourseEditPage() {
             rows={4}
             className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 resize-none"
           />
+        </div>
+
+        <div>
+          <label className="text-xs text-zinc-500 mb-1 block">
+            커버 이미지 URL
+          </label>
+          <input
+            value={coverImageUrl}
+            onChange={(e) => setCoverImageUrl(e.target.value)}
+            placeholder="https://example.com/cover.jpg (비워두면 카테고리 아이콘 표시)"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500"
+          />
+          {coverImageUrl && (
+            <img
+              src={coverImageUrl}
+              alt="커버 미리보기"
+              className="mt-2 h-24 w-full object-cover rounded-xl border border-zinc-700"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -285,7 +335,7 @@ export default function CourseEditPage() {
           <div className="space-y-2">
             {lectures.map((lec, idx) => (
               <div
-                key={idx}
+                key={lec.id ?? idx}
                 className="flex items-center gap-3 bg-zinc-800 rounded-xl px-4 py-3"
               >
                 <span className="w-6 h-6 rounded-full bg-zinc-700 text-xs flex items-center justify-center text-zinc-400 font-bold shrink-0">
@@ -302,6 +352,24 @@ export default function CourseEditPage() {
                 <span className="text-xs text-zinc-600 shrink-0">
                   {lec.duration}초
                 </span>
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <button
+                    onClick={() => handleMoveLecture(idx, "up")}
+                    disabled={idx === 0}
+                    className="text-xs text-zinc-500 hover:text-white disabled:opacity-20 transition-colors leading-none"
+                    title="위로 이동"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => handleMoveLecture(idx, "down")}
+                    disabled={idx === lectures.length - 1}
+                    className="text-xs text-zinc-500 hover:text-white disabled:opacity-20 transition-colors leading-none"
+                    title="아래로 이동"
+                  >
+                    ▼
+                  </button>
+                </div>
                 <button
                   onClick={() => handleDeleteLecture(idx)}
                   className="text-xs text-red-500 hover:text-red-400 shrink-0 transition-colors"

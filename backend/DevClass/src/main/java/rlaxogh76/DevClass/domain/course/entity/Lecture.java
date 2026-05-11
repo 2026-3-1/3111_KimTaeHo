@@ -30,4 +30,8 @@ public class Lecture {
 
     @Column(nullable = false)
     private Integer sequence;
+
+    public void updateSequence(Integer sequence) {
+        if (sequence != null) this.sequence = sequence;
+    }
 }

@@ -54,9 +54,20 @@ export default function CourseCard({ course }: Props) {
     >
       {/* 썸네일 */}
       <div className="relative h-40 bg-zinc-800 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
-        <span className="relative text-5xl">{meta.emoji}</span>
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent" />
+        {course.coverImageUrl ? (
+          <img
+            src={course.coverImageUrl}
+            alt={course.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-linear-to-br from-zinc-700 to-zinc-900" />
+        )}
+        {!course.coverImageUrl && (
+          <span className="relative text-5xl">{meta.emoji}</span>
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent" />
         <span
           className={`absolute top-3 left-3 text-xs font-bold px-2 py-1 rounded-md bg-zinc-900/70 backdrop-blur-sm ${meta.accent}`}
         >

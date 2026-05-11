@@ -102,6 +102,17 @@ public class TeacherCourseController {
                 .body(teacherCourseService.addLecture(courseId, request, user.getId()));
     }
 
+    @Operation(summary = "영상 순서 변경")
+    @PatchMapping("/courses/{courseId}/lectures/{lectureId}")
+    public ResponseEntity<TeacherCourseResponse.LectureItem> updateLectureSequence(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long courseId,
+            @PathVariable Long lectureId,
+            @Valid @RequestBody LectureUpdateRequest request) {
+        requireTeacher(user);
+        return ResponseEntity.ok(teacherCourseService.updateLectureSequence(courseId, lectureId, request, user.getId()));
+    }
+
     @Operation(summary = "영상 삭제")
     @DeleteMapping("/courses/{courseId}/lectures/{lectureId}")
     public ResponseEntity<Void> deleteLecture(

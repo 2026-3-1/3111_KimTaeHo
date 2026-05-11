@@ -7,5 +7,6 @@ public record CourseUpdateRequest(
         String description,
         @Min(0) Integer price,
         String category,
-        String level
+        String level,
+        String coverImageUrl
 ) {}

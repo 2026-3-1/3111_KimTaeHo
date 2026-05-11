@@ -56,6 +56,7 @@ public class TeacherCourseService {
                 .price(request.price())
                 .category(request.category())
                 .level(request.level())
+                .coverImageUrl(request.coverImageUrl())
                 .teacher(teacher)
                 .build();
 
@@ -83,7 +84,7 @@ public class TeacherCourseService {
     public TeacherCourseResponse updateCourse(Long courseId, CourseUpdateRequest request, Long teacherId) {
         Course course = findCourseOwnedBy(courseId, teacherId);
         course.update(request.title(), request.description(), request.price(),
-                request.category(), request.level());
+                request.category(), request.level(), request.coverImageUrl());
         return TeacherCourseResponse.from(course);
     }
 
@@ -129,6 +130,16 @@ public class TeacherCourseService {
                 .filter(l -> l.getCourse().getId().equals(courseId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.LECTURE_NOT_FOUND_IN_COURSE));
         lectureRepository.delete(lecture);
+    }
+
+    @Transactional
+    public TeacherCourseResponse.LectureItem updateLectureSequence(Long courseId, Long lectureId, LectureUpdateRequest request, Long teacherId) {
+        findCourseOwnedBy(courseId, teacherId);
+        Lecture lecture = lectureRepository.findById(lectureId)
+                .filter(l -> l.getCourse().getId().equals(courseId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.LECTURE_NOT_FOUND_IN_COURSE));
+        lecture.updateSequence(request.sequence());
+        return TeacherCourseResponse.LectureItem.from(lecture);
     }
 
     @Transactional(readOnly = true)

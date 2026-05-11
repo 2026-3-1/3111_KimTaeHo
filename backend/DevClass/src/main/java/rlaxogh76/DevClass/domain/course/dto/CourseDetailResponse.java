@@ -13,6 +13,7 @@ public record CourseDetailResponse(
         String teacherName,
         String category,
         String level,
+        String coverImageUrl,
         int lectureCount,
         BigDecimal averageRating,
         int reviewCount
@@ -32,6 +33,7 @@ public record CourseDetailResponse(
                 course.getTeacher().getEmail(),
                 course.getCategory(),
                 course.getLevel(),
+                course.getCoverImageUrl(),
                 lectureCount,
                 averageRating,
                 reviewCount

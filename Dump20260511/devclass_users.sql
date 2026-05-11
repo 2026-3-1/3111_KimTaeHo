@@ -32,7 +32,7 @@ CREATE TABLE `users` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +41,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'teacher1@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(2,'teacher2@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(3,'student1@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(4,'student2@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(5,'student3@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(6,'test@devclass.com','',NULL,'$2a$10$YLGgI9YjlHuf6wbTsEIqIed1ywLiTYj6vtv5ZzB8arwhJQct3q6zW','STUDENT','2026-03-17 23:27:19'),(7,'btm.email2769@gmail.com','',NULL,'$2a$10$TvqhDq1eHGo36SZf4FUhDO6mLp6.OADolrFI2y4kajhV/T6WT5llC','STUDENT','2026-04-06 20:17:43'),(8,'teacher@gmail.com','',NULL,'$2a$10$PAz8C9xWyIy6CS2srMQ.6eqX0MRxmsyYMdf8QveVNfy47x9TMkZ4q','TEACHER','2026-04-20 22:59:22'),(9,'teacher3@gmail.com','김태호','하이','$2a$10$wmWv2h.QFdOwlJCW83c4J.PmPmrb8.F/YUfR9SO/d7hqbqW4gUcHa','TEACHER','2026-04-20 23:01:13'),(10,'dwadwad@gmail.com','',NULL,'$2a$10$WMYMwbX47XietlirRQWahO.h4h0kAOsyAuBB/1ftX8fw7HrlI4Zqu','STUDENT','2026-04-20 23:17:35'),(11,'btm.email27619@gmail.com','',NULL,'$2a$10$CSChVeXdjxChIaUFTc5yquAqzefa3RnJkUGubDhn81SK.GAOexWCC','STUDENT','2026-04-21 08:35:07');
+INSERT INTO `users` VALUES (1,'teacher1@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(2,'teacher2@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','TEACHER','2026-03-17 21:54:36'),(3,'student1@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(4,'student2@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(5,'student3@devclass.com','',NULL,'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lF1m','STUDENT','2026-03-17 21:54:36'),(6,'test@devclass.com','',NULL,'$2a$10$YLGgI9YjlHuf6wbTsEIqIed1ywLiTYj6vtv5ZzB8arwhJQct3q6zW','STUDENT','2026-03-17 23:27:19'),(7,'btm.email2769@gmail.com','',NULL,'$2a$10$TvqhDq1eHGo36SZf4FUhDO6mLp6.OADolrFI2y4kajhV/T6WT5llC','STUDENT','2026-04-06 20:17:43'),(8,'teacher@gmail.com','',NULL,'$2a$10$PAz8C9xWyIy6CS2srMQ.6eqX0MRxmsyYMdf8QveVNfy47x9TMkZ4q','TEACHER','2026-04-20 22:59:22'),(9,'teacher3@gmail.com','김태호','하이','$2a$10$wmWv2h.QFdOwlJCW83c4J.PmPmrb8.F/YUfR9SO/d7hqbqW4gUcHa','TEACHER','2026-04-20 23:01:13'),(10,'dwadwad@gmail.com','',NULL,'$2a$10$WMYMwbX47XietlirRQWahO.h4h0kAOsyAuBB/1ftX8fw7HrlI4Zqu','STUDENT','2026-04-20 23:17:35'),(11,'btm.email27619@gmail.com','',NULL,'$2a$10$CSChVeXdjxChIaUFTc5yquAqzefa3RnJkUGubDhn81SK.GAOexWCC','STUDENT','2026-04-21 08:35:07'),(12,'rlaxogh76@gmail.com','',NULL,'$2a$10$Xl3RuDGTU7eiViB9gltmneHYo8zTs5pO6utseE5AAZz3FNil6YuXK','STUDENT','2026-04-21 12:03:48');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -54,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-21 11:47:44
+-- Dump completed on 2026-05-11 23:42:17

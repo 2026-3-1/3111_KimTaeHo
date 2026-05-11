@@ -11,6 +11,7 @@ public record CourseListResponse(
         String teacherName,
         String category,
         String level,
+        String coverImageUrl,
         BigDecimal averageRating
 ) {
     public static CourseListResponse from(Course course) {
@@ -22,7 +23,8 @@ public record CourseListResponse(
                 course.getTeacher().getEmail(),
                 course.getCategory(),
                 course.getLevel(),
-                course.getAverageRating()   // getRating() → getAverageRating()
+                course.getCoverImageUrl(),
+                course.getAverageRating()
         );
     }
 }

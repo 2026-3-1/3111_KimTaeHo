@@ -11,6 +11,7 @@ public record CourseCreateRequest(
         @NotNull @Min(0) Integer price,
         @NotBlank String category,
         @NotBlank String level,
+        String coverImageUrl,
         List<LectureItem> lectures
 ) {
     public record LectureItem(
