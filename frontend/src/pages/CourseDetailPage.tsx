@@ -153,8 +153,19 @@ export default function CourseDetailPage() {
       <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden mb-5">
         {/* 썸네일 배너 */}
         <div className="h-48 bg-linear-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent" />
-          <span className="text-8xl">{catMeta.emoji}</span>
+          {course.coverImageUrl ? (
+            <img
+              src={course.coverImageUrl}
+              alt={course.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent" />
+              <span className="text-8xl">{catMeta.emoji}</span>
+            </>
+          )}
           <div className="absolute inset-0 bg-linear-to-t from-zinc-900/80 to-transparent" />
           <div className="absolute bottom-4 left-6 flex items-center gap-2">
             <span
