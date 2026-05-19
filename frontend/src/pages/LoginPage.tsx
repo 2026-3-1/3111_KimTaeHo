@@ -35,12 +35,14 @@ export default function LoginPage() {
     try {
       const res = await loginApi({ email, password });
       const claims = parseJwt(res.accessToken);
+      const role = claims.role ?? "STUDENT";
       login(res.accessToken, {
         id: claims.id ?? claims.userId ?? Number(claims.sub) ?? 0,
         email: claims.email ?? claims.sub ?? email,
-        role: claims.role ?? "STUDENT",
+        role,
       });
-      navigate(from, { replace: true });
+      const destination = role === "TEACHER" && from === "/" ? "/teacher" : from;
+      navigate(destination, { replace: true });
     } catch (e: any) {
       setError(
         e.response?.status === 401
