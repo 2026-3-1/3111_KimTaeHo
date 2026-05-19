@@ -9,6 +9,67 @@ import {
   deleteLecture,
 } from "../api/teacher";
 
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: (() => void) | undefined;
+  }
+}
+
+function extractYouTubeVideoId(url: string): string | null {
+  const patterns = [
+    /youtube\.com\/embed\/([^?&/]+)/,
+    /youtube\.com\/watch\?.*v=([^&]+)/,
+    /youtu\.be\/([^?/]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function fetchYouTubeDuration(videoId: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const containerId = `yt-tmp-${Date.now()}`;
+    const el = document.createElement("div");
+    el.id = containerId;
+    el.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;";
+    document.body.appendChild(el);
+
+    const cleanup = () => el.parentNode?.removeChild(el);
+    const timeout = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 15000);
+
+    const createPlayer = () => {
+      new window.YT.Player(containerId, {
+        videoId,
+        playerVars: { autoplay: 0 },
+        events: {
+          onReady: (e: any) => {
+            const dur = Math.round(e.target.getDuration());
+            clearTimeout(timeout);
+            cleanup();
+            resolve(dur);
+          },
+          onError: () => { clearTimeout(timeout); cleanup(); reject(new Error("player error")); },
+        },
+      });
+    };
+
+    if (window.YT?.Player) {
+      createPlayer();
+    } else {
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const s = document.createElement("script");
+        s.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(s);
+      }
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => { prev?.(); createPlayer(); };
+    }
+  });
+}
+
 const CATEGORIES = [
   "프론트엔드",
   "백엔드",
@@ -50,6 +111,7 @@ export default function CourseEditPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fetchingDuration, setFetchingDuration] = useState(false);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -115,6 +177,27 @@ export default function CourseEditPage() {
       setError(e.response?.data?.message || "저장에 실패했습니다.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleVideoUrlBlur = async (url: string) => {
+    if (!url.trim()) return;
+    const normalized = /^[a-zA-Z0-9_-]{10,12}$/.test(url.trim())
+      ? `https://www.youtube.com/embed/${url.trim()}`
+      : url.trim();
+    if (normalized !== url) {
+      setNewLecture((p) => ({ ...p, videoUrl: normalized }));
+    }
+    const videoId = extractYouTubeVideoId(normalized);
+    if (!videoId) return;
+    setFetchingDuration(true);
+    try {
+      const dur = await fetchYouTubeDuration(videoId);
+      setNewLecture((p) => ({ ...p, duration: String(dur) }));
+    } catch {
+      // 자동 감지 실패 시 수동 입력 유지
+    } finally {
+      setFetchingDuration(false);
     }
   };
 
@@ -383,34 +466,41 @@ export default function CourseEditPage() {
 
         <div className="border border-zinc-700 rounded-xl p-4 space-y-3">
           <p className="text-xs font-semibold text-zinc-400">영상 추가</p>
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              value={newLecture.title}
-              onChange={(e) =>
-                setNewLecture((p) => ({ ...p, title: e.target.value }))
-              }
-              placeholder="영상 제목 *"
-              className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500"
-            />
+          <input
+            value={newLecture.title}
+            onChange={(e) =>
+              setNewLecture((p) => ({ ...p, title: e.target.value }))
+            }
+            placeholder="영상 제목 *"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500"
+          />
+          <input
+            value={newLecture.videoUrl}
+            onChange={(e) =>
+              setNewLecture((p) => ({ ...p, videoUrl: e.target.value }))
+            }
+            onBlur={(e) => handleVideoUrlBlur(e.target.value)}
+            placeholder="YouTube 영상 코드 또는 URL * (예: UHAAZKCSKSE)"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500"
+          />
+          <div className="relative">
             <input
               type="number"
               value={newLecture.duration}
               onChange={(e) =>
                 setNewLecture((p) => ({ ...p, duration: e.target.value }))
               }
-              placeholder="길이 (초)"
+              disabled={fetchingDuration}
+              placeholder={fetchingDuration ? "영상 길이 감지 중..." : "길이 (초) — URL 입력 시 자동 감지"}
               min={0}
-              className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 disabled:opacity-50"
             />
+            {fetchingDuration && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500 animate-pulse">
+                감지 중...
+              </span>
+            )}
           </div>
-          <input
-            value={newLecture.videoUrl}
-            onChange={(e) =>
-              setNewLecture((p) => ({ ...p, videoUrl: e.target.value }))
-            }
-            placeholder="영상 URL * (YouTube embed URL 등)"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500"
-          />
           <button
             onClick={handleAddLecture}
             className="w-full py-2 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 text-sm font-medium transition-colors"
