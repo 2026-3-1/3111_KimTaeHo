@@ -22,6 +22,12 @@ import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentFailPage from "./pages/PaymentFailPage";
 import { CartProvider, useCart } from "./context/CartContext";
 
+function HomeRoute() {
+  const { user } = useAuth();
+  if (user?.role === "TEACHER") return <Navigate to="/teacher" replace />;
+  return <CourseListPage />;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
   const location = useLocation();
@@ -139,7 +145,7 @@ export default function App() {
             <Header />
             <main className="max-w-6xl mx-auto px-6 py-10">
               <Routes>
-                <Route path="/" element={<CourseListPage />} />
+                <Route path="/" element={<HomeRoute />} />
                 <Route
                   path="/courses/:courseId"
                   element={<CourseDetailPage />}
