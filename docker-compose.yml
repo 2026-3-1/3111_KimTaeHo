@@ -18,7 +18,7 @@ services:
       retries: 5
 
   backend:
-    build: ./backend/DevClass
+    image: ${DOCKER_USERNAME}/devclass-backend:${IMAGE_TAG:-latest}
     container_name: devclass-backend
     depends_on:
       db:
@@ -33,11 +33,12 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+      SENTRY_DSN: ${SENTRY_DSN}
     ports:
       - "8080:8080"
 
   frontend:
-    build: ./frontend
+    image: ${DOCKER_USERNAME}/devclass-frontend:${IMAGE_TAG:-latest}
     container_name: devclass-frontend
     depends_on:
       - backend

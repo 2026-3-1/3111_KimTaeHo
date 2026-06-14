@@ -46,7 +46,25 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ── 2. EC2 서버에 SSH 접속 후 배포 ───────────────────────────────
+      # ── 2. EC2 배포 디렉터리 & docker-compose 동기화 ─────────────────
+      - name: Prepare EC2 deploy directory
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: mkdir -p ~/devclass
+
+      - name: Sync docker-compose.yml to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: docker-compose.yml
+          target: ~/devclass/
+
+      # ── 3. EC2 서버에 SSH 접속 후 배포 ───────────────────────────────
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
         with:
@@ -77,14 +95,22 @@ jobs:
             docker compose up -d --remove-orphans
 
             # 헬스체크 (최대 60초 대기)
+            HEALTHY=0
             for i in $(seq 1 12); do
               if curl -sf http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
                 echo "✅ 헬스체크 통과"
+                HEALTHY=1
                 break
               fi
               echo "⏳ 대기 중... ($i/12)"
               sleep 5
             done
+
+            if [ $HEALTHY -eq 0 ]; then
+              echo "❌ 헬스체크 실패 — 배포 롤백"
+              docker compose logs --tail=50 backend
+              exit 1
+            fi
 
             # 미사용 이미지 정리
             docker image prune -f
