@@ -97,4 +97,26 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @Operation(summary = "이메일 인증 코드 발송", description = "입력한 이메일로 6자리 인증 코드를 발송합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "인증 코드 발송 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 이메일 형식")
+    })
+    @PostMapping("/email/send-code")
+    public ResponseEntity<Void> sendVerificationCode(@Valid @RequestBody EmailSendRequest request) {
+        authService.sendVerificationCode(request.email());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "이메일 인증 코드 확인", description = "발송된 인증 코드를 검증합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "인증 성공"),
+            @ApiResponse(responseCode = "400", description = "코드 불일치 또는 만료")
+    })
+    @PostMapping("/email/verify-code")
+    public ResponseEntity<Void> verifyCode(@Valid @RequestBody EmailVerifyRequest request) {
+        authService.verifyCode(request.email(), request.code());
+        return ResponseEntity.ok().build();
+    }
 }

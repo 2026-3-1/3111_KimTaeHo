@@ -1,39 +1,76 @@
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
   datasource:
-    url: jdbc:mysql://localhost:3306/devclass
-    username: dev
-    password: 1234   # ?? ????? ??
+    url: ${DB_URL:jdbc:mysql://localhost:3306/devclass}
+    username: ${DB_USERNAME:dev}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: validate         # DDL? ?? ?? ? validate? ????
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
+        "[format_sql]": true
     show-sql: true
 
-  # ?? ??: SQL ???? devclass_db.sql ?? ??
   sql:
     init:
       mode: never
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 jwt:
-  secret: devclass-secret-key-must-be-at-least-256-bits-long-for-hs256
-  expiration-ms: 86400000    # 24??
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 toss:
-  secret-key: test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R
+  secret-key: ${TOSS_SECRET_KEY}
+
+discord:
+  webhook-url: ${DISCORD_WEBHOOK_URL:}
+
+refund:
+  max-progress-percent: ${REFUND_MAX_PROGRESS_PERCENT:30}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: devclass
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
+
+sentry:
+  dsn: ${SENTRY_DSN:}
+  traces-sample-rate: 0.2
+  environment: ${SPRING_PROFILES_ACTIVE:local}
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    com.devclass: DEBUG
-
+    "[org.hibernate.SQL]": DEBUG
+    "[rlaxogh76.DevClass]": DEBUG
 
 springdoc:
   swagger-ui:

@@ -9,6 +9,8 @@ import CourseSearchBar from "../components/CourseSearchBar";
 import { PAGE_SIZE } from "../types/course";
 import CourseActiveFilters from "../components/CourseActiveFilters";
 
+import * as Sentry from "@sentry/react";
+
 export default function CourseListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -57,6 +59,15 @@ export default function CourseListPage() {
     fetch();
   }, [keyword, category, level, sort, page]);
 
+  // Sentry 테스트
+  useEffect(() => {
+    Sentry.captureMessage("CourseListPage loaded", "info");
+  }, []);
+
+  const throwTestError = () => {
+    throw new Error("Sentry 테스트 오류 - CourseListPage");
+  };
+
   return (
     <div>
       {/* 히어로 */}
@@ -69,6 +80,13 @@ export default function CourseListPage() {
             ? `총 ${totalElements}개의 강의`
             : "원하는 강의를 찾아보세요"}
         </p>
+        {/* TODO: Sentry 테스트 후 제거 */}
+        <button
+          onClick={throwTestError}
+          className="mt-3 px-3 py-1 text-xs bg-red-700 text-white rounded hover:bg-red-600"
+        >
+          Sentry 오류 테스트
+        </button>
       </div>
 
       {/* 검색 + 필터 */}

@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+import * as Sentry from "@sentry/react";
 import {
   BrowserRouter,
   Routes,
@@ -7,20 +9,22 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import CourseListPage from "./pages/CourseListPage";
-import CourseDetailPage from "./pages/CourseDetailPage";
-import MyEnrollmentsPage from "./pages/MyEnrollmentsPage";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import WatchPage from "./pages/WatchPage";
-import TeacherDashboardPage from "./pages/TeacherDashboardPage";
-import StudentListPage from "./pages/StudentListPage";
-import ProfilePage from "./pages/ProfilePage";
-import CourseEditPage from "./pages/CourseEditPage";
-import CartPage from "./pages/CartPage";
-import PaymentSuccessPage from "./pages/PaymentSuccessPage";
-import PaymentFailPage from "./pages/PaymentFailPage";
 import { CartProvider, useCart } from "./context/CartContext";
+
+const CourseListPage     = lazy(() => import("./pages/CourseListPage"));
+const CourseDetailPage   = lazy(() => import("./pages/CourseDetailPage"));
+const MyEnrollmentsPage  = lazy(() => import("./pages/MyEnrollmentsPage"));
+const LoginPage          = lazy(() => import("./pages/LoginPage"));
+const SignupPage         = lazy(() => import("./pages/SignupPage"));
+const WatchPage          = lazy(() => import("./pages/WatchPage"));
+const TeacherDashboardPage = lazy(() => import("./pages/TeacherDashboardPage"));
+const StudentListPage    = lazy(() => import("./pages/StudentListPage"));
+const ProfilePage        = lazy(() => import("./pages/ProfilePage"));
+const CourseEditPage     = lazy(() => import("./pages/CourseEditPage"));
+const CartPage           = lazy(() => import("./pages/CartPage"));
+const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage"));
+const PaymentFailPage    = lazy(() => import("./pages/PaymentFailPage"));
+const MyPaymentsPage     = lazy(() => import("./pages/MyPaymentsPage"));
 
 function HomeRoute() {
   const { user } = useAuth();
@@ -83,21 +87,24 @@ function Header() {
             ? navItem("/teacher", "대시보드")
             : navItem("/my", "내 강의")}
           {user?.role === "STUDENT" && (
-            <button
-              onClick={() => navigate("/cart")}
-              className={`text-sm font-medium transition-colors ${
-                location.pathname === "/cart"
-                  ? "text-white"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              장바구니
-              {count > 0 && (
-                <span className="ml-2 text-[10px] font-black text-black bg-orange-400 rounded-full px-1.5 py-0.5">
-                  {count}
-                </span>
-              )}
-            </button>
+            <>
+              {navItem("/my/payments", "결제 내역")}
+              <button
+                onClick={() => navigate("/cart")}
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname === "/cart"
+                    ? "text-white"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                장바구니
+                {count > 0 && (
+                  <span className="ml-2 text-[10px] font-black text-black bg-orange-400 rounded-full px-1.5 py-0.5">
+                    {count}
+                  </span>
+                )}
+              </button>
+            </>
           )}
         </nav>
 
@@ -138,12 +145,14 @@ function Header() {
 
 export default function App() {
   return (
+    <Sentry.ErrorBoundary fallback={<div className="flex justify-center items-center h-64 text-red-400">오류가 발생했습니다.</div>}>
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
           <div className="min-h-screen bg-zinc-950 text-white">
             <Header />
             <main className="max-w-6xl mx-auto px-6 py-10">
+              <Suspense fallback={<div className="flex justify-center items-center h-64 text-zinc-400">로딩 중...</div>}>
               <Routes>
                 <Route path="/" element={<HomeRoute />} />
                 <Route
@@ -170,6 +179,14 @@ export default function App() {
                 />
                 <Route path="/payment/success" element={<PaymentSuccessPage />} />
                 <Route path="/payment/fail" element={<PaymentFailPage />} />
+                <Route
+                  path="/my/payments"
+                  element={
+                    <ProtectedRoute>
+                      <MyPaymentsPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/courses/:courseId/watch"
                   element={<WatchPage />}
@@ -215,10 +232,12 @@ export default function App() {
                   }
                 />
               </Routes>
+              </Suspense>
             </main>
           </div>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
+    </Sentry.ErrorBoundary>
   );
 }

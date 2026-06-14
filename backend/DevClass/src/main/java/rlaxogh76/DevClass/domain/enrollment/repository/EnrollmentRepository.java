@@ -5,12 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     boolean existsByUserIdAndCourseId(Long userId, Long courseId);
+
+    List<Enrollment> findByUserIdAndCourseIdIn(Long userId, List<Long> courseIds);
 
     Optional<Enrollment> findByUserIdAndCourseId(Long userId, Long courseId);
 
@@ -35,6 +38,26 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     int countByCourseId(Long courseId);
 
     void deleteByCourseId(Long courseId);
+
+    @Query("""
+        SELECT e FROM Enrollment e
+        JOIN FETCH e.user u
+        JOIN FETCH e.course c
+        WHERE e.totalProgress < :maxProgress
+        AND e.enrolledAt < :before
+        """)
+    List<Enrollment> findLowProgressEnrollments(
+            @Param("maxProgress") int maxProgress,
+            @Param("before") LocalDateTime before);
+
+    @Query("""
+        SELECT e FROM Enrollment e
+        JOIN FETCH e.user u
+        JOIN FETCH e.course c
+        JOIN FETCH c.teacher t
+        WHERE e.enrolledAt >= :from
+        """)
+    List<Enrollment> findEnrollmentsSince(@Param("from") LocalDateTime from);
 
     @Query("""
         SELECT DATE(e.enrolledAt), COUNT(e)

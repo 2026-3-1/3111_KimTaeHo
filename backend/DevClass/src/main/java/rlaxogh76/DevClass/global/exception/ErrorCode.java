@@ -27,7 +27,13 @@ public enum ErrorCode {
     CART_EMPTY("장바구니가 비어 있습니다.", HttpStatus.BAD_REQUEST),
     PAYMENT_NOT_FOUND("결제 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     PAYMENT_AMOUNT_MISMATCH("결제 금액이 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
-    PAYMENT_CONFIRM_FAILED("결제 승인에 실패했습니다.", HttpStatus.BAD_GATEWAY);
+    PAYMENT_CONFIRM_FAILED("결제 승인에 실패했습니다.", HttpStatus.BAD_GATEWAY),
+    EMAIL_NOT_VERIFIED("이메일 인증을 완료해주세요.", HttpStatus.BAD_REQUEST),
+    EMAIL_VERIFICATION_FAILED("인증 코드가 올바르지 않거나 만료되었습니다.", HttpStatus.BAD_REQUEST),
+    EMAIL_SEND_FAILED("이메일 발송에 실패했습니다. SMTP 설정을 확인해주세요.", HttpStatus.INTERNAL_SERVER_ERROR),
+    REFUND_PROGRESS_EXCEEDED("수강 진행률이 환불 기준을 초과하여 환불이 불가합니다.", HttpStatus.BAD_REQUEST),
+    PAYMENT_ALREADY_REFUNDED("이미 환불된 결제입니다.", HttpStatus.BAD_REQUEST),
+    PAYMENT_CANCEL_FAILED("결제 취소에 실패했습니다.", HttpStatus.BAD_GATEWAY);
 
     private final String message;
     private final HttpStatus status;

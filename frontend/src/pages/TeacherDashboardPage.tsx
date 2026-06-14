@@ -36,6 +36,13 @@ export default function TeacherDashboardPage() {
   const [tab, setTab] = useState<"courses" | "stats">("courses");
 
   useEffect(() => {
+    if (user && user.role !== "TEACHER") {
+      navigate("/");
+      return;
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {

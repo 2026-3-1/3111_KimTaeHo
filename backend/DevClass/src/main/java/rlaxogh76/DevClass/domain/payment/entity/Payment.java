@@ -40,6 +40,9 @@ public class Payment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt;
+
     @PrePersist
     protected void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -52,5 +55,10 @@ public class Payment {
 
     public void fail() {
         this.status = PaymentStatus.FAILED;
+    }
+
+    public void refund() {
+        this.status = PaymentStatus.REFUNDED;
+        this.refundedAt = LocalDateTime.now();
     }
 }

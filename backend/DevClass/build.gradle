@@ -45,13 +45,30 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
+	// Mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// Actuator + Prometheus
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+	// AOP
+	implementation 'org.aspectj:aspectjweaver:1.9.22'
+
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// Spring Retry (Exponential Backoff)
+	implementation 'org.springframework.retry:spring-retry:2.0.11'
+
+	// Sentry (Error Tracking via Logback)
+	implementation 'io.sentry:sentry-logback:7.14.0'
+
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {

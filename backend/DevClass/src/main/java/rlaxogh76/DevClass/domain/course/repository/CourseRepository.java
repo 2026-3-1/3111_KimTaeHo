@@ -3,6 +3,8 @@ package rlaxogh76.DevClass.domain.course.repository;
 import rlaxogh76.DevClass.domain.course.entity.Course;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -69,4 +71,8 @@ public interface CourseRepository
     List<Course> findByTeacherIdOrderByCreatedAtDesc(@Param("teacherId") Long teacherId);
 
     boolean existsByIdAndTeacherId(Long courseId, Long teacherId);
+
+    // Specification + 페이징 시 teacher N+1 방지
+    @EntityGraph(attributePaths = {"teacher"})
+    Page<Course> findAll(Specification<Course> spec, Pageable pageable);
 }

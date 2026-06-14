@@ -32,3 +32,11 @@ export const login = async (body: LoginRequest): Promise<LoginResponse> => {
   const { data } = await api.post("/auth/login", body);
   return data;
 };
+
+export const sendVerificationCode = async (email: string): Promise<void> => {
+  await api.post("/auth/email/send-code", { email });
+};
+
+export const verifyCode = async (email: string, code: string): Promise<void> => {
+  await api.post("/auth/email/verify-code", { email, code });
+};

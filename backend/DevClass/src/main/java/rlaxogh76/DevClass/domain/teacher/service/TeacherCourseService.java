@@ -11,6 +11,8 @@ import rlaxogh76.DevClass.domain.user.entity.User;
 import rlaxogh76.DevClass.domain.user.repository.UserRepository;
 import rlaxogh76.DevClass.global.exception.BusinessException;
 import rlaxogh76.DevClass.global.exception.ErrorCode;
+import rlaxogh76.DevClass.global.notification.DiscordService;
+import rlaxogh76.DevClass.global.notification.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,8 @@ public class TeacherCourseService {
     private final EnrollmentRepository enrollmentRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final DiscordService discordService;
 
     @Transactional(readOnly = true)
     public List<TeacherCourseResponse> getMyCourses(Long teacherId) {
@@ -77,6 +81,10 @@ public class TeacherCourseService {
 
         Course withLectures = courseRepository.findById(saved.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
+
+        emailService.sendCourseCreatedNotification(teacher.getEmail(), teacher.getName(), saved.getTitle());
+        discordService.sendCourseCreatedAlert(teacher.getName(), saved.getTitle());
+
         return TeacherCourseResponse.from(withLectures);
     }
 

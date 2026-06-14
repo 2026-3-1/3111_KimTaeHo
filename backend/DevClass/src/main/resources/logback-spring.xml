@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 콘솔 출력 (구조화 로그) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Sentry 오류 추적 (ERROR 레벨 이상 자동 수집) -->
+    <springProperty name="SENTRY_DSN" source="sentry.dsn" defaultValue=""/>
+    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+        <options>
+            <dsn>${SENTRY_DSN}</dsn>
+            <environment>${spring.profiles.active:-local}</environment>
+        </options>
+        <!-- ERROR 이상만 Sentry로 전송 -->
+        <minimumEventLevel>ERROR</minimumEventLevel>
+        <!-- WARN 이상은 breadcrumb(컨텍스트)로 수집 -->
+        <minimumBreadcrumbLevel>WARN</minimumBreadcrumbLevel>
+    </appender>
+
+    <!-- 애플리케이션 로거 -->
+    <logger name="rlaxogh76.DevClass" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="SENTRY"/>
+    </logger>
+
+    <!-- Hibernate SQL 로거 (운영에서는 INFO로 올릴 것) -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="SENTRY"/>
+    </root>
+
+</configuration>

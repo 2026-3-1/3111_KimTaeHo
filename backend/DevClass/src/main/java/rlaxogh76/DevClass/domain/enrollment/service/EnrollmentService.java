@@ -78,6 +78,32 @@ public class EnrollmentService {
         enrollmentRepository.delete(enrollment);
     }
 
+    @Transactional(readOnly = true)
+    public int getProgressForCourse(Long userId, Long courseId) {
+        return enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
+                .map(Enrollment::getTotalProgress)
+                .orElse(0);
+    }
+
+    @Transactional(readOnly = true)
+    public void validateRefundEligibility(Long userId, List<Long> courseIds, int maxProgressPercent) {
+        List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndCourseIdIn(userId, courseIds);
+        boolean anyExceeds = enrollments.stream()
+                .anyMatch(e -> e.getTotalProgress() > maxProgressPercent);
+        if (anyExceeds) {
+            throw new BusinessException(ErrorCode.REFUND_PROGRESS_EXCEEDED);
+        }
+    }
+
+    @Transactional
+    public void cancelForRefund(Long userId, List<Long> courseIds) {
+        List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndCourseIdIn(userId, courseIds);
+        for (Enrollment enrollment : enrollments) {
+            enrollment.getCourse().decreaseEnrollmentCount();
+            enrollmentRepository.delete(enrollment);
+        }
+    }
+
     /**
      * 학습 진행률 저장
      * [검증 추가] 전달한 lectureId가 수강 중인 강의 소속인지 확인
