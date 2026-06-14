@@ -55,7 +55,9 @@ jobs:
           MAIL_USERNAME: test@test.com
           MAIL_PASSWORD: testpass
           SENTRY_DSN: ""
-        run: ./gradlew test --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew test --no-daemon
 
       - name: Upload test report
         if: always()
