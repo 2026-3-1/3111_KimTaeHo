@@ -46,8 +46,8 @@ export default function CourseListPage() {
         if (level) params.level = level;
         if (sort) params.sort = sort;
         const data = await getCourses(params);
-        setCourses(data.content);
-        setTotalElements(data.totalElements);
+        setCourses(data.content ?? []);
+        setTotalElements(data.totalElements ?? 0);
       } catch (e) {
         console.error(e);
       } finally {
