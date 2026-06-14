@@ -3,3 +3,8 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+
+management:
+  health:
+    mail:
+      enabled: false

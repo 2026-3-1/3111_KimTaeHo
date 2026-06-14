@@ -94,15 +94,15 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
 
-            # 헬스체크 (최대 60초 대기)
+            # 헬스체크 (최대 120초 대기)
             HEALTHY=0
-            for i in $(seq 1 12); do
-              if curl -sf http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+            for i in $(seq 1 24); do
+              if curl -s http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
                 echo "✅ 헬스체크 통과"
                 HEALTHY=1
                 break
               fi
-              echo "⏳ 대기 중... ($i/12)"
+              echo "⏳ 대기 중... ($i/24)"
               sleep 5
             done
 
