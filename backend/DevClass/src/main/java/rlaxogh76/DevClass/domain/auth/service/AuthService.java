@@ -82,7 +82,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_SUSPENDED);
         }
         loginAttemptService.recordSuccess(request.email());
-        String token = jwtProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        String token = jwtProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name(), user.getName());
         return LoginResponse.of(token);
     }
 }

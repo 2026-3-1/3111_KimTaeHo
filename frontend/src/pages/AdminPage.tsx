@@ -128,7 +128,6 @@ export default function AdminPage() {
     if (tab === "qna" && questions.length === 0) getAdminQuestions().then(setQuestions).catch(console.error);
   }, [tab]);
 
-  const pendingTeachers = users.filter(u => u.role === "PENDING_TEACHER");
   const pendingApplications = applications.filter(a => a.status === "PENDING");
 
   async function handleApproveApplication(id: number) {

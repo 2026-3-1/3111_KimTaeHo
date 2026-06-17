@@ -40,6 +40,7 @@ export default function LoginPage() {
         id: claims.id ?? claims.userId ?? Number(claims.sub) ?? 0,
         email: claims.email ?? claims.sub ?? email,
         role,
+        name: claims.name ?? "",
       });
       const destination = role === "TEACHER" && from === "/" ? "/teacher" : from;
       navigate(destination, { replace: true });

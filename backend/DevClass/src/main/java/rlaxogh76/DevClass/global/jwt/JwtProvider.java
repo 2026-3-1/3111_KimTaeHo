@@ -28,12 +28,13 @@ public class JwtProvider {
         this.adminExpirationMs = adminExpirationMs;
     }
 
-    public String generateToken(Long userId, String email, String role) {
+    public String generateToken(Long userId, String email, String role, String name) {
         long expiry = "ADMIN".equals(role) ? adminExpirationMs : expirationMs;
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("role", role)
+                .claim("name", name)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiry))
                 .signWith(key)
