@@ -1,5 +1,6 @@
 package rlaxogh76.DevClass.global.jwt;
 
+import rlaxogh76.DevClass.domain.user.entity.User;
 import rlaxogh76.DevClass.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
             Long userId = jwtProvider.getUserId(token);
-            userRepository.findById(userId).ifPresent(user -> {
+            userRepository.findById(userId).filter(User::isActive).ifPresent(user -> {
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 user,

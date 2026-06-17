@@ -56,6 +56,10 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Lecture> lectures = new ArrayList<>();
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean published = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -83,5 +87,13 @@ public class Course {
 
     public void updateAverageRating(BigDecimal averageRating) {
         this.averageRating = averageRating;
+    }
+
+    public void publish() {
+        this.published = true;
+    }
+
+    public void unpublish() {
+        this.published = false;
     }
 }

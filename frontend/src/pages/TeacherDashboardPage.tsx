@@ -5,11 +5,16 @@ import {
   getCourseStats,
   getDailyEnrollments,
   deleteCourse,
+  publishCourse,
+  unpublishCourse,
+  getTeacherQuestions,
+  createTeacherAnswer,
 } from "../api/teacher";
 import type {
   TeacherCourse,
   CourseStatsItem,
   DailyEnrollment,
+  TeacherQuestionItem,
 } from "../api/teacher";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -32,8 +37,9 @@ export default function TeacherDashboardPage() {
   const [courses, setCourses] = useState<TeacherCourse[]>([]);
   const [stats, setStats] = useState<CourseStatsItem[]>([]);
   const [daily, setDaily] = useState<DailyEnrollment[]>([]);
+  const [questions, setQuestions] = useState<TeacherQuestionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"courses" | "stats">("courses");
+  const [tab, setTab] = useState<"courses" | "stats" | "qna">("courses");
 
   useEffect(() => {
     if (user && user.role !== "TEACHER") {
@@ -46,14 +52,16 @@ export default function TeacherDashboardPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const [c, s, d] = await Promise.all([
+        const [c, s, d, q] = await Promise.all([
           getTeacherCourses(),
           getCourseStats(),
           getDailyEnrollments(),
+          getTeacherQuestions(),
         ]);
         setCourses(c);
         setStats(s);
         setDaily(d);
+        setQuestions(q);
       } catch (e) {
         console.error(e);
       } finally {
@@ -127,7 +135,7 @@ export default function TeacherDashboardPage() {
 
       {/* 탭 */}
       <div className="flex gap-1 border-b border-zinc-800">
-        {(["courses", "stats"] as const).map((t) => (
+        {(["courses", "stats", "qna"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -137,7 +145,7 @@ export default function TeacherDashboardPage() {
                 : "border-transparent text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            {t === "courses" ? "내 강의" : "통계"}
+            {t === "courses" ? "내 강의" : t === "stats" ? "통계" : `Q&A${questions.length > 0 ? ` (${questions.length})` : ""}`}
           </button>
         ))}
       </div>
@@ -147,8 +155,13 @@ export default function TeacherDashboardPage() {
           courses={courses}
           onRefresh={() => getTeacherCourses().then(setCourses)}
         />
-      ) : (
+      ) : tab === "stats" ? (
         <StatsView stats={stats} daily={daily} />
+      ) : (
+        <QnaView
+          questions={questions}
+          onRefresh={() => getTeacherQuestions().then(setQuestions)}
+        />
       )}
     </div>
   );
@@ -162,11 +175,12 @@ function CourseList({
   onRefresh: () => void;
 }) {
   const navigate = useNavigate();
+  const [publishingId, setPublishingId] = useState<number | null>(null);
 
   const handleDelete = async (courseId: number, title: string) => {
     if (
       !confirm(
-        `"${title}" 강의를 삭제하시겠습니까?\n삭제하면 되돌릴 수 없습니다.`,
+        `"${title}" 강의를 삭제하시겠습니까?\n수강 중인 학생이 있으면 자동으로 환불 처리됩니다.\n삭제하면 되돌릴 수 없습니다.`,
       )
     )
       return;
@@ -175,6 +189,23 @@ function CourseList({
       onRefresh();
     } catch (e: any) {
       alert(e.response?.data?.message || "삭제 실패");
+    }
+  };
+
+  const handleTogglePublish = async (course: TeacherCourse) => {
+    if (publishingId) return;
+    setPublishingId(course.id);
+    try {
+      if (course.published) {
+        await unpublishCourse(course.id);
+      } else {
+        await publishCourse(course.id);
+      }
+      onRefresh();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "처리 실패");
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -197,7 +228,18 @@ function CourseList({
           className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between gap-4"
         >
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-white truncate">{course.title}</p>
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="font-bold text-white truncate">{course.title}</p>
+              {course.published ? (
+                <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  발행됨
+                </span>
+              ) : (
+                <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-700/50 text-zinc-400 border border-zinc-700">
+                  임시저장
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500">
               <span>{course.category}</span>
               <span>·</span>
@@ -213,6 +255,18 @@ function CourseList({
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => handleTogglePublish(course)}
+              disabled={publishingId === course.id || (!course.published && course.lectures.length === 0)}
+              title={!course.published && course.lectures.length === 0 ? "강의 영상을 먼저 추가해주세요" : ""}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                course.published
+                  ? "border-zinc-600 text-zinc-400 hover:text-white hover:border-zinc-400"
+                  : "border-emerald-700 text-emerald-400 hover:bg-emerald-900/30"
+              }`}
+            >
+              {publishingId === course.id ? "처리 중..." : course.published ? "발행 취소" : "발행"}
+            </button>
             <button
               onClick={() => navigate(`/teacher/courses/${course.id}/students`)}
               className="text-xs px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
@@ -231,10 +285,126 @@ function CourseList({
             >
               삭제
             </button>
-            {/* TODO: 이미 수강 중인 학생이 있을 때 삭제 요청 보내면 500 에러 발생 -> 백엔드 수정해야함. */}
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function QnaView({
+  questions,
+  onRefresh,
+}: {
+  questions: TeacherQuestionItem[];
+  onRefresh: () => void;
+}) {
+  const [answerInputs, setAnswerInputs] = useState<Record<number, string>>({});
+  const [submitting, setSubmitting] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  if (questions.length === 0) {
+    return (
+      <div className="text-center py-20 text-zinc-600">
+        <p className="text-lg font-bold">아직 등록된 질문이 없습니다</p>
+      </div>
+    );
+  }
+
+  const handleSubmitAnswer = async (questionId: number) => {
+    const content = answerInputs[questionId]?.trim();
+    if (!content) return;
+    setSubmitting(questionId);
+    try {
+      await createTeacherAnswer(questionId, content);
+      setAnswerInputs((prev) => ({ ...prev, [questionId]: "" }));
+      onRefresh();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "답변 등록 실패");
+    } finally {
+      setSubmitting(null);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {questions.map((q) => {
+        const isOpen = expanded === q.id;
+        const hasAnswer = q.answers.length > 0;
+        return (
+          <div
+            key={q.id}
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
+          >
+            <button
+              onClick={() => setExpanded(isOpen ? null : q.id)}
+              className="w-full text-left p-5 flex items-start justify-between gap-4"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0">
+                    {q.courseTitle}
+                  </span>
+                  {hasAnswer && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shrink-0">
+                      답변완료
+                    </span>
+                  )}
+                </div>
+                <p className="font-semibold text-white truncate">{q.title}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {q.authorName} · {new Date(q.createdAt).toLocaleDateString("ko-KR")}
+                </p>
+              </div>
+              <span className="text-zinc-500 shrink-0 mt-1">{isOpen ? "▲" : "▼"}</span>
+            </button>
+
+            {isOpen && (
+              <div className="px-5 pb-5 border-t border-zinc-800">
+                <p className="text-sm text-zinc-300 py-4 whitespace-pre-wrap">{q.content}</p>
+
+                {q.answers.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {q.answers.map((a) => (
+                      <div
+                        key={a.id}
+                        className="bg-zinc-800/60 rounded-xl p-4 border-l-2 border-orange-500"
+                      >
+                        <p className="text-xs text-orange-400 font-semibold mb-1">
+                          {a.authorName} (강사)
+                        </p>
+                        <p className="text-sm text-zinc-200 whitespace-pre-wrap">{a.content}</p>
+                        <p className="text-xs text-zinc-600 mt-2">
+                          {new Date(a.createdAt).toLocaleDateString("ko-KR")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <textarea
+                    value={answerInputs[q.id] ?? ""}
+                    onChange={(e) =>
+                      setAnswerInputs((prev) => ({ ...prev, [q.id]: e.target.value }))
+                    }
+                    placeholder="답변을 입력하세요..."
+                    rows={3}
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+                  />
+                  <button
+                    onClick={() => handleSubmitAnswer(q.id)}
+                    disabled={submitting === q.id || !answerInputs[q.id]?.trim()}
+                    className="shrink-0 self-end bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting === q.id ? "등록 중..." : "답변 등록"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

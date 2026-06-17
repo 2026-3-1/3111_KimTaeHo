@@ -5,10 +5,13 @@ import {
   getLectures,
   getReviews,
   getMyEnrollments,
+  getQuestions,
 } from "../api/course";
 import type { CourseDetail, Lecture, Review, MyEnrollment } from "../types";
+import type { QnaQuestion } from "../api/course";
 import ReviewItem from "../components/ReviewItem";
 import ReviewForm from "../components/ReviewForm";
+import QnaSection from "../components/QnaSection";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 
@@ -55,6 +58,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [questions, setQuestions] = useState<QnaQuestion[]>([]);
   const [myEnrollment, setMyEnrollment] = useState<MyEnrollment | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
@@ -73,6 +77,7 @@ export default function CourseDetailPage() {
           getCourse(id),
           getLectures(id),
           getReviews(id),
+          getQuestions(id),
         ];
         // 강사는 수강 목록 조회 불필요
         if (isLoggedIn && user && !isTeacher) {
@@ -82,8 +87,9 @@ export default function CourseDetailPage() {
         setCourse(results[0] as CourseDetail);
         setLectures(results[1] as Lecture[]);
         setReviews(results[2] as Review[]);
-        if (isLoggedIn && user && !isTeacher && results[3]) {
-          const found = (results[3] as MyEnrollment[]).find(
+        setQuestions(results[3] as QnaQuestion[]);
+        if (isLoggedIn && user && !isTeacher && results[4]) {
+          const found = (results[4] as MyEnrollment[]).find(
             (e) => e.courseId === id,
           );
           if (found) {
@@ -378,6 +384,14 @@ export default function CourseDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Q&A */}
+      <QnaSection
+        courseId={course.id}
+        teacherId={course.teacherId}
+        questions={questions}
+        onRefresh={() => getQuestions(course.id).then(setQuestions).catch(console.error)}
+      />
     </div>
   );
 }

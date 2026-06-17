@@ -25,9 +25,11 @@ const CartPage           = lazy(() => import("./pages/CartPage"));
 const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage"));
 const PaymentFailPage    = lazy(() => import("./pages/PaymentFailPage"));
 const MyPaymentsPage     = lazy(() => import("./pages/MyPaymentsPage"));
+const AdminPage          = lazy(() => import("./pages/AdminPage"));
 
 function HomeRoute() {
   const { user } = useAuth();
+  if (user?.role === "ADMIN") return <Navigate to="/admin" replace />;
   if (user?.role === "TEACHER") return <Navigate to="/teacher" replace />;
   return <CourseListPage />;
 }
@@ -37,6 +39,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoggedIn } = useAuth();
+  const location = useLocation();
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+  if (user?.role !== "ADMIN") {
+    return <Navigate to="/" replace />;
   }
   return <>{children}</>;
 }
@@ -82,10 +96,16 @@ function Header() {
         </button>
 
         <nav className="flex items-center gap-8">
-          {navItem("/", "강의")}
-          {user?.role === "TEACHER"
-            ? navItem("/teacher", "대시보드")
-            : navItem("/my", "내 강의")}
+          {user?.role === "ADMIN" ? (
+            navItem("/admin", "관리자")
+          ) : (
+            <>
+              {navItem("/", "강의")}
+              {user?.role === "TEACHER"
+                ? navItem("/teacher", "대시보드")
+                : navItem("/my", "내 강의")}
+            </>
+          )}
           {user?.role === "STUDENT" && (
             <>
               {navItem("/my/payments", "결제 내역")}
@@ -229,6 +249,14 @@ export default function App() {
                     <ProtectedRoute>
                       <StudentListPage />
                     </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminPage />
+                    </AdminRoute>
                   }
                 />
               </Routes>

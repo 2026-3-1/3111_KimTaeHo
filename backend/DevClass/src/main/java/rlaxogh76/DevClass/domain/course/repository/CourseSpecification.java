@@ -12,11 +12,16 @@ public class CourseSpecification {
 
     public static Specification<Course> filter(CourseFilterRequest req) {
         return Specification
-                .where(likeKeyword(req.getKeyword()))
+                .where(isPublished())
+                .and(likeKeyword(req.getKeyword()))
                 .and(eqCategory(req.getCategory()))
                 .and(eqLevel(req.getLevel()))
                 .and(betweenPrice(req.getMinPrice(), req.getMaxPrice()))
                 .and(minRating(req.getMinRating()));
+    }
+
+    private static Specification<Course> isPublished() {
+        return (root, query, cb) -> cb.isTrue(root.get("published"));
     }
 
     private static Specification<Course> likeKeyword(String keyword) {

@@ -43,9 +43,9 @@ public class CourseService {
         );
     }
 
-    /** 강의 상세 조회 */
+    /** 강의 상세 조회 (학생용 — 발행된 강좌만) */
     public CourseDetailResponse getCourse(Long courseId) {
-        Course course = courseRepository.findById(courseId)
+        Course course = courseRepository.findByIdAndPublishedTrue(courseId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
 
         int lectureCount = lectureRepository.countByCourseId(courseId);
@@ -59,9 +59,9 @@ public class CourseService {
         );
     }
 
-    /** 강의 영상 목록 조회 */
+    /** 강의 영상 목록 조회 (학생용 — 발행된 강좌만) */
     public List<LectureResponse> getLectures(Long courseId) {
-        if (!courseRepository.existsById(courseId)) {
+        if (!courseRepository.existsByIdAndPublishedTrue(courseId)) {
             throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
         }
         return lectureRepository.findByCourseIdOrderBySequenceAsc(courseId)

@@ -52,11 +52,14 @@ public class AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new BusinessException(ErrorCode.EMAIL_DUPLICATE);
         }
+        User.Role assignedRole = request.role() == User.Role.TEACHER
+                ? User.Role.PENDING_TEACHER
+                : request.role();
         User user = User.builder()
                 .email(request.email())
                 .name("")
                 .password(passwordEncoder.encode(request.password()))
-                .role(request.role())
+                .role(assignedRole)
                 .build();
         User saved = userRepository.save(user);
         emailVerificationService.remove(request.email());
@@ -69,6 +72,9 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+        }
+        if (!user.isActive()) {
+            throw new BusinessException(ErrorCode.ACCOUNT_SUSPENDED);
         }
         String token = jwtProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
         return LoginResponse.of(token);

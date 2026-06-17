@@ -61,4 +61,27 @@ public class Payment {
         this.status = PaymentStatus.REFUNDED;
         this.refundedAt = LocalDateTime.now();
     }
+
+    public void partialRefund(long cancelAmount) {
+        this.amount = this.amount - cancelAmount;
+        this.status = PaymentStatus.PARTIALLY_REFUNDED;
+        this.refundedAt = LocalDateTime.now();
+    }
+
+    public boolean containsCourse(Long courseId) {
+        if (courseIds == null) return false;
+        for (String id : courseIds.split(",")) {
+            if (id.trim().equals(String.valueOf(courseId))) return true;
+        }
+        return false;
+    }
+
+    public void removeCourseId(Long courseId) {
+        if (courseIds == null) return;
+        String updated = java.util.Arrays.stream(courseIds.split(","))
+                .map(String::trim)
+                .filter(id -> !id.equals(String.valueOf(courseId)))
+                .collect(java.util.stream.Collectors.joining(","));
+        this.courseIds = updated;
+    }
 }

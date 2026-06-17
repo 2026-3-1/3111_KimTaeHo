@@ -38,6 +38,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean active = true;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -46,7 +50,11 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void activate() { this.active = true; }
+    public void deactivate() { this.active = false; }
+    public void changeRole(Role newRole) { this.role = newRole; }
+
     public enum Role {
-        STUDENT, TEACHER
+        STUDENT, TEACHER, PENDING_TEACHER, ADMIN
     }
 }

@@ -33,7 +33,14 @@ public enum ErrorCode {
     EMAIL_SEND_FAILED("이메일 발송에 실패했습니다. SMTP 설정을 확인해주세요.", HttpStatus.INTERNAL_SERVER_ERROR),
     REFUND_PROGRESS_EXCEEDED("수강 진행률이 환불 기준을 초과하여 환불이 불가합니다.", HttpStatus.BAD_REQUEST),
     PAYMENT_ALREADY_REFUNDED("이미 환불된 결제입니다.", HttpStatus.BAD_REQUEST),
-    PAYMENT_CANCEL_FAILED("결제 취소에 실패했습니다.", HttpStatus.BAD_GATEWAY);
+    PAYMENT_CANCEL_FAILED("결제 취소에 실패했습니다.", HttpStatus.BAD_GATEWAY),
+    COURSE_HAS_NO_LECTURES("강의 영상이 없는 강좌는 발행할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    QUESTION_NOT_FOUND("존재하지 않는 질문입니다.", HttpStatus.NOT_FOUND),
+    QUESTION_NOT_AUTHORIZED("본인의 질문만 삭제할 수 있습니다.", HttpStatus.FORBIDDEN),
+    ANSWER_NOT_FOUND("존재하지 않는 답변입니다.", HttpStatus.NOT_FOUND),
+    ANSWER_NOT_AUTHORIZED("강사만 답변을 작성할 수 있습니다.", HttpStatus.FORBIDDEN),
+    ACCOUNT_SUSPENDED("정지된 계정입니다. 관리자에게 문의하세요.", HttpStatus.FORBIDDEN),
+    PAYMENT_ALREADY_CANCELLED("이미 취소된 결제입니다.", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus status;

@@ -19,7 +19,8 @@ public record TeacherCourseResponse(
         BigDecimal averageRating,
         Integer enrollmentCount,
         LocalDateTime createdAt,
-        List<LectureItem> lectures
+        List<LectureItem> lectures,
+        boolean published
 ) {
     public record LectureItem(
             Long id,
@@ -49,7 +50,8 @@ public record TeacherCourseResponse(
                 course.getAverageRating(),
                 course.getEnrollmentCount(),
                 course.getCreatedAt(),
-                lectureItems
+                lectureItems,
+                course.isPublished()
         );
     }
 }

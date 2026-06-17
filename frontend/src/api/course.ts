@@ -58,3 +58,51 @@ export const postReview = async (body: {
 }): Promise<void> => {
   await api.post("/reviews", body);
 };
+
+// QnA
+export type QnaAnswer = {
+  id: number;
+  content: string;
+  authorName: string;
+  authorId: number;
+  createdAt: string;
+};
+
+export type QnaQuestion = {
+  id: number;
+  title: string;
+  content: string;
+  authorName: string;
+  authorId: number;
+  createdAt: string;
+  answers: QnaAnswer[];
+};
+
+export const getQuestions = async (courseId: number): Promise<QnaQuestion[]> => {
+  const { data } = await api.get(`/courses/${courseId}/questions`);
+  return data;
+};
+
+export const createQuestion = async (
+  courseId: number,
+  body: { title: string; content: string },
+): Promise<QnaQuestion> => {
+  const { data } = await api.post(`/courses/${courseId}/questions`, body);
+  return data;
+};
+
+export const deleteQuestion = async (questionId: number): Promise<void> => {
+  await api.delete(`/questions/${questionId}`);
+};
+
+export const createAnswer = async (
+  questionId: number,
+  body: { content: string },
+): Promise<QnaQuestion> => {
+  const { data } = await api.post(`/questions/${questionId}/answers`, body);
+  return data;
+};
+
+export const deleteAnswer = async (answerId: number): Promise<void> => {
+  await api.delete(`/answers/${answerId}`);
+};

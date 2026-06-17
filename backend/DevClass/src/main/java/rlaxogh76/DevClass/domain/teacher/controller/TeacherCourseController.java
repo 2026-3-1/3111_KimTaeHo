@@ -1,5 +1,7 @@
 package rlaxogh76.DevClass.domain.teacher.controller;
 
+import rlaxogh76.DevClass.domain.qna.dto.QuestionResponse;
+import rlaxogh76.DevClass.domain.qna.service.QnaService;
 import rlaxogh76.DevClass.domain.review.dto.ReviewResponse;
 import rlaxogh76.DevClass.domain.review.service.ReviewService;
 import rlaxogh76.DevClass.domain.teacher.dto.*;
@@ -28,6 +30,7 @@ public class TeacherCourseController {
     private final TeacherCourseService teacherCourseService;
     private final ProfileService profileService;
     private final ReviewService reviewService;
+    private final QnaService qnaService;
 
     @Operation(summary = "내 프로필 조회")
     @GetMapping("/profile")
@@ -79,6 +82,24 @@ public class TeacherCourseController {
             @RequestBody CourseUpdateRequest request) {
         requireTeacher(user);
         return ResponseEntity.ok(teacherCourseService.updateCourse(courseId, request, user.getId()));
+    }
+
+    @Operation(summary = "강의 발행")
+    @PostMapping("/courses/{courseId}/publish")
+    public ResponseEntity<TeacherCourseResponse> publishCourse(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long courseId) {
+        requireTeacher(user);
+        return ResponseEntity.ok(teacherCourseService.publishCourse(courseId, user.getId()));
+    }
+
+    @Operation(summary = "강의 발행 취소")
+    @DeleteMapping("/courses/{courseId}/publish")
+    public ResponseEntity<TeacherCourseResponse> unpublishCourse(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long courseId) {
+        requireTeacher(user);
+        return ResponseEntity.ok(teacherCourseService.unpublishCourse(courseId, user.getId()));
     }
 
     @Operation(summary = "강의 삭제")
@@ -157,6 +178,13 @@ public class TeacherCourseController {
         requireTeacher(user);
         teacherCourseService.getCourse(courseId, user.getId());
         return ResponseEntity.ok(reviewService.getReviews(courseId));
+    }
+
+    @Operation(summary = "내 강의 Q&A 전체 조회")
+    @GetMapping("/questions")
+    public ResponseEntity<List<QuestionResponse>> getMyQuestions(@AuthenticationPrincipal User user) {
+        requireTeacher(user);
+        return ResponseEntity.ok(qnaService.getTeacherQuestions(user.getId()));
     }
 
     private void requireLogin(User user) {

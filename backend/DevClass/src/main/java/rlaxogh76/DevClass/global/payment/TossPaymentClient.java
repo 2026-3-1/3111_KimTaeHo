@@ -74,6 +74,43 @@ public class TossPaymentClient {
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 8000)
     )
+    public void cancelPartialPayment(String paymentKey, String cancelReason, long cancelAmount) throws IOException, InterruptedException {
+        log.info("[Toss] 부분 결제 취소 요청 paymentKey={} cancelAmount={}", paymentKey, cancelAmount);
+
+        String credentials = Base64.getEncoder()
+                .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
+
+        String body = String.format(
+                "{\"cancelReason\":\"%s\",\"cancelAmount\":%d}",
+                cancelReason, cancelAmount
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(String.format(TOSS_CANCEL_URL, paymentKey)))
+                .header("Authorization", "Basic " + credentials)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> response = HttpClient.newBuilder()
+                .proxy(HttpClient.Builder.NO_PROXY)
+                .build()
+                .send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            log.error("[Toss] 부분 결제 취소 실패 status={} body={}", response.statusCode(), response.body());
+            throw new BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED);
+        }
+
+        log.info("[Toss] 부분 결제 취소 성공 paymentKey={}", paymentKey);
+    }
+
+    @Retryable(
+            retryFor = {IOException.class, InterruptedException.class},
+            noRetryFor = {BusinessException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 8000)
+    )
     public void cancelPayment(String paymentKey, String cancelReason) throws IOException, InterruptedException {
         log.info("[Toss] 결제 취소 요청 paymentKey={}", paymentKey);
 

@@ -4,7 +4,11 @@ import rlaxogh76.DevClass.domain.course.entity.Course;
 import rlaxogh76.DevClass.domain.course.entity.Lecture;
 import rlaxogh76.DevClass.domain.course.repository.CourseRepository;
 import rlaxogh76.DevClass.domain.course.repository.LectureRepository;
+import rlaxogh76.DevClass.domain.enrollment.entity.Enrollment;
 import rlaxogh76.DevClass.domain.enrollment.repository.EnrollmentRepository;
+import rlaxogh76.DevClass.domain.payment.entity.Payment;
+import rlaxogh76.DevClass.domain.payment.entity.PaymentStatus;
+import rlaxogh76.DevClass.domain.payment.repository.PaymentRepository;
 import rlaxogh76.DevClass.domain.review.repository.ReviewRepository;
 import rlaxogh76.DevClass.domain.teacher.dto.*;
 import rlaxogh76.DevClass.domain.user.entity.User;
@@ -13,12 +17,16 @@ import rlaxogh76.DevClass.global.exception.BusinessException;
 import rlaxogh76.DevClass.global.exception.ErrorCode;
 import rlaxogh76.DevClass.global.notification.DiscordService;
 import rlaxogh76.DevClass.global.notification.EmailService;
+import rlaxogh76.DevClass.global.payment.TossPaymentClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TeacherCourseService {
@@ -28,6 +36,8 @@ public class TeacherCourseService {
     private final EnrollmentRepository enrollmentRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
+    private final TossPaymentClient tossPaymentClient;
     private final EmailService emailService;
     private final DiscordService discordService;
 
@@ -97,11 +107,61 @@ public class TeacherCourseService {
     }
 
     @Transactional
+    public TeacherCourseResponse publishCourse(Long courseId, Long teacherId) {
+        Course course = findCourseOwnedBy(courseId, teacherId);
+        if (course.getLectures().isEmpty()) {
+            throw new BusinessException(ErrorCode.COURSE_HAS_NO_LECTURES);
+        }
+        course.publish();
+        return TeacherCourseResponse.from(course);
+    }
+
+    @Transactional
+    public TeacherCourseResponse unpublishCourse(Long courseId, Long teacherId) {
+        Course course = findCourseOwnedBy(courseId, teacherId);
+        course.unpublish();
+        return TeacherCourseResponse.from(course);
+    }
+
+    @Transactional
     public void deleteCourse(Long courseId, Long teacherId) {
         Course course = findCourseOwnedBy(courseId, teacherId);
 
-        enrollmentRepository.deleteByCourseId(courseId);
+        // 수강 중인 학생들에게 환불 처리 (PAID + PARTIALLY_REFUNDED 둘 다 검색)
+        List<Payment> affectedPayments = paymentRepository.findActiveByCourseId(
+                String.valueOf(courseId), List.of(PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED));
 
+        for (Payment payment : affectedPayments) {
+            if (!payment.containsCourse(courseId)) continue;
+
+            User student = userRepository.findById(payment.getUserId()).orElse(null);
+            if (student == null) continue;
+
+            long courseIds = payment.getCourseIds().split(",").length;
+            try {
+                if (courseIds == 1) {
+                    // 단일 강좌 결제 → 전액 환불
+                    tossPaymentClient.cancelPayment(payment.getPaymentKey(), "강사의 강좌 폐강으로 인한 환불");
+                    payment.refund();
+                } else {
+                    // 복수 강좌 결제 → 해당 강좌 금액만큼 부분 환불
+                    long refundAmount = course.getPrice();
+                    tossPaymentClient.cancelPartialPayment(payment.getPaymentKey(), "강사의 강좌 폐강으로 인한 부분 환불", refundAmount);
+                    payment.removeCourseId(courseId);
+                    payment.partialRefund(refundAmount);
+                }
+                emailService.sendCourseDeletedRefundNotification(
+                        student.getEmail(), student.getName(), course.getTitle(),
+                        courseIds == 1 ? payment.getAmount() : course.getPrice()
+                );
+            } catch (IOException | InterruptedException e) {
+                log.error("[Course Delete] Toss 환불 실패 paymentKey={} courseId={}", payment.getPaymentKey(), courseId, e);
+                // 환불 실패 시 삭제 중단 — 데이터 무결성 보장
+                throw new BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED);
+            }
+        }
+
+        enrollmentRepository.deleteByCourseId(courseId);
         courseRepository.delete(course);
     }
 

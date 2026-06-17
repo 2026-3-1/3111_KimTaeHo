@@ -21,4 +21,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByIdAndUserId(Long reviewId, Long userId);
 
     int countByCourseId(Long courseId);
+
+    @Query("SELECT r FROM Review r JOIN FETCH r.user JOIN FETCH r.course ORDER BY r.createdAt DESC")
+    List<Review> findAllWithUserAndCourse();
 }

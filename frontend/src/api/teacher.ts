@@ -13,6 +13,7 @@ export type TeacherCourse = {
   enrollmentCount: number;
   createdAt: string;
   lectures: TeacherLecture[];
+  published: boolean;
 };
 
 export type TeacherLecture = {
@@ -126,6 +127,16 @@ export const deleteCourse = async (courseId: number): Promise<void> => {
   await api.delete(`/teacher/courses/${courseId}`);
 };
 
+export const publishCourse = async (courseId: number): Promise<TeacherCourse> => {
+  const { data } = await api.post(`/teacher/courses/${courseId}/publish`);
+  return data;
+};
+
+export const unpublishCourse = async (courseId: number): Promise<TeacherCourse> => {
+  const { data } = await api.delete(`/teacher/courses/${courseId}/publish`);
+  return data;
+};
+
 export const addLecture = async (
   courseId: number,
   body: LectureAddBody,
@@ -178,4 +189,36 @@ export const getCourseReviewsTeacher = async (
 ): Promise<Review[]> => {
   const { data } = await api.get(`/teacher/courses/${courseId}/reviews`);
   return data;
+};
+
+export type TeacherAnswerItem = {
+  id: number;
+  content: string;
+  authorName: string;
+  authorId: number;
+  createdAt: string;
+};
+
+export type TeacherQuestionItem = {
+  id: number;
+  courseId: number;
+  courseTitle: string;
+  title: string;
+  content: string;
+  authorName: string;
+  authorId: number;
+  createdAt: string;
+  answers: TeacherAnswerItem[];
+};
+
+export const getTeacherQuestions = async (): Promise<TeacherQuestionItem[]> => {
+  const { data } = await api.get("/teacher/questions");
+  return data;
+};
+
+export const createTeacherAnswer = async (
+  questionId: number,
+  content: string,
+): Promise<void> => {
+  await api.post(`/questions/${questionId}/answers`, { content });
 };

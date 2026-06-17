@@ -72,6 +72,10 @@ public interface CourseRepository
 
     boolean existsByIdAndTeacherId(Long courseId, Long teacherId);
 
+    java.util.Optional<Course> findByIdAndPublishedTrue(Long courseId);
+
+    boolean existsByIdAndPublishedTrue(Long courseId);
+
     // Specification + 페이징 시 teacher N+1 방지
     @EntityGraph(attributePaths = {"teacher"})
     Page<Course> findAll(Specification<Course> spec, Pageable pageable);
