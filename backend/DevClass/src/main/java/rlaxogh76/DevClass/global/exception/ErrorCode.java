@@ -42,7 +42,11 @@ public enum ErrorCode {
     ACCOUNT_SUSPENDED("정지된 계정입니다. 관리자에게 문의하세요.", HttpStatus.FORBIDDEN),
     PAYMENT_ALREADY_CANCELLED("이미 취소된 결제입니다.", HttpStatus.BAD_REQUEST),
     LOGIN_ATTEMPTS_EXCEEDED("로그인 시도 횟수를 초과했습니다. 15분 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
-    ADMIN_IP_BLOCKED("허용되지 않은 IP 주소에서의 관리자 접근입니다.", HttpStatus.FORBIDDEN);
+    ADMIN_IP_BLOCKED("허용되지 않은 IP 주소에서의 관리자 접근입니다.", HttpStatus.FORBIDDEN),
+    ALREADY_TEACHER("이미 강사 또는 관리자 계정입니다.", HttpStatus.CONFLICT),
+    TEACHER_APPLICATION_ALREADY_EXISTS("이미 강사 신청이 접수되어 있습니다.", HttpStatus.CONFLICT),
+    TEACHER_APPLICATION_NOT_FOUND("강사 신청을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    TEACHER_APPLICATION_ALREADY_REVIEWED("이미 처리된 강사 신청입니다.", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus status;

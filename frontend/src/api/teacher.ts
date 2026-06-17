@@ -222,3 +222,7 @@ export const createTeacherAnswer = async (
 ): Promise<void> => {
   await api.post(`/questions/${questionId}/answers`, { content });
 };
+
+export const applyForTeacher = async (phone: string, introduction: string): Promise<void> => {
+  await api.post("/teacher/apply", { phone, introduction });
+};

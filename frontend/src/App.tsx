@@ -26,6 +26,7 @@ const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage"));
 const PaymentFailPage    = lazy(() => import("./pages/PaymentFailPage"));
 const MyPaymentsPage     = lazy(() => import("./pages/MyPaymentsPage"));
 const AdminPage          = lazy(() => import("./pages/AdminPage"));
+const TeacherApplyPage   = lazy(() => import("./pages/TeacherApplyPage"));
 
 function HomeRoute() {
   const { user } = useAuth();
@@ -109,6 +110,7 @@ function Header() {
           {user?.role === "STUDENT" && (
             <>
               {navItem("/my/payments", "결제 내역")}
+              {navItem("/teacher-apply", "강사 신청")}
               <button
                 onClick={() => navigate("/cart")}
                 className={`text-sm font-medium transition-colors ${
@@ -248,6 +250,14 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <StudentListPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher-apply"
+                  element={
+                    <ProtectedRoute>
+                      <TeacherApplyPage />
                     </ProtectedRoute>
                   }
                 />

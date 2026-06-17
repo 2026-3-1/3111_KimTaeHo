@@ -11,13 +11,16 @@ import {
   adminDeleteReview,
   adminDeleteQuestion,
   sendBroadcastEmail,
+  getTeacherApplications,
+  approveTeacherApplication,
+  rejectTeacherApplication,
 } from "../api/admin";
 import type {
   AdminStats, AdminRevenue, AdminUser, AdminCourse,
-  AdminPayment, AdminReview, AdminQna,
+  AdminPayment, AdminReview, AdminQna, TeacherApplication,
 } from "../api/admin";
 
-type Tab = "overview" | "users" | "courses" | "payments" | "reviews" | "qna" | "email";
+type Tab = "overview" | "users" | "courses" | "payments" | "reviews" | "qna" | "email" | "teacher-apply";
 
 function fmt(iso: string | null) {
   if (!iso) return "-";
@@ -86,6 +89,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "reviews", label: "리뷰 관리" },
   { key: "qna", label: "Q&A 관리" },
   { key: "email", label: "이메일 발송" },
+  { key: "teacher-apply", label: "강사 신청" },
 ];
 
 const ROLES = ["STUDENT", "PENDING_TEACHER", "TEACHER", "ADMIN"];
@@ -99,6 +103,7 @@ export default function AdminPage() {
   const [payments, setPayments] = useState<AdminPayment[]>([]);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [questions, setQuestions] = useState<AdminQna[]>([]);
+  const [applications, setApplications] = useState<TeacherApplication[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Email form
@@ -109,8 +114,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([getAdminStats(), getAdminRevenue()])
-      .then(([s, r]) => { setStats(s); setRevenue(r); })
+    Promise.all([getAdminStats(), getAdminRevenue(), getTeacherApplications()])
+      .then(([s, r, a]) => { setStats(s); setRevenue(r); setApplications(a); })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -124,6 +129,20 @@ export default function AdminPage() {
   }, [tab]);
 
   const pendingTeachers = users.filter(u => u.role === "PENDING_TEACHER");
+  const pendingApplications = applications.filter(a => a.status === "PENDING");
+
+  async function handleApproveApplication(id: number) {
+    if (!confirm("강사 신청을 승인하시겠습니까? 신청자에게 승인 이메일이 발송됩니다.")) return;
+    await approveTeacherApplication(id).catch(e => { alert(e.response?.data?.message || "실패"); return; });
+    setApplications(prev => prev.map(a => a.id === id ? { ...a, status: "APPROVED" as const } : a));
+  }
+
+  async function handleRejectApplication(id: number) {
+    const reason = prompt("거절 사유를 입력하세요 (선택사항):");
+    if (reason === null) return;
+    await rejectTeacherApplication(id, reason || undefined).catch(e => { alert(e.response?.data?.message || "실패"); return; });
+    setApplications(prev => prev.map(a => a.id === id ? { ...a, status: "REJECTED" as const } : a));
+  }
 
   async function handleRoleChange(userId: number, role: string) {
     const updated = await changeUserRole(userId, role).catch(e => { alert(e.response?.data?.message || "실패"); return null; });
@@ -188,9 +207,9 @@ export default function AdminPage() {
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${tab === t.key ? "bg-orange-500 text-white" : "text-zinc-400 hover:text-white"}`}>
             {t.label}
-            {t.key === "users" && pendingTeachers.length > 0 && (
+            {t.key === "teacher-apply" && pendingApplications.length > 0 && (
               <span className="ml-1.5 text-[10px] bg-amber-500 text-black font-black px-1.5 py-0.5 rounded-full">
-                {pendingTeachers.length}
+                {pendingApplications.length}
               </span>
             )}
           </button>
@@ -247,24 +266,27 @@ export default function AdminPage() {
           </div>
 
           {/* 승인 대기 강사 */}
-          {pendingTeachers.length > 0 && (
+          {pendingApplications.length > 0 && (
             <div className="bg-zinc-900 rounded-2xl border border-amber-500/20 p-6">
               <h2 className="text-sm font-black text-white mb-4 flex items-center gap-2">
-                강사 승인 대기
+                강사 신청 승인 대기
                 <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
-                  {pendingTeachers.length}명
+                  {pendingApplications.length}건
                 </span>
               </h2>
-              <div className="space-y-2">
-                {pendingTeachers.map(u => (
-                  <div key={u.id} className="flex items-center justify-between py-2 px-3 bg-zinc-800/50 rounded-xl">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{u.name}</p>
-                      <p className="text-xs text-zinc-500">{u.email} · 신청일 {fmt(u.createdAt)}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <ActionBtn label="강사 승인" color="emerald" onClick={() => handleRoleChange(u.id, "TEACHER")} />
-                      <ActionBtn label="거절 (학생 전환)" color="red" onClick={() => handleRoleChange(u.id, "STUDENT")} />
+              <div className="space-y-3">
+                {pendingApplications.map(app => (
+                  <div key={app.id} className="py-3 px-4 bg-zinc-800/50 rounded-xl">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-white">{app.userName || app.userEmail}</p>
+                        <p className="text-xs text-zinc-500 mb-1">{app.userEmail} · {app.phone} · {fmt(app.createdAt)}</p>
+                        <p className="text-xs text-zinc-400 line-clamp-2">{app.introduction}</p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <ActionBtn label="승인" color="emerald" onClick={() => handleApproveApplication(app.id)} />
+                        <ActionBtn label="거절" color="red" onClick={() => handleRejectApplication(app.id)} />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -518,6 +540,62 @@ export default function AdminPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── 강사 신청 관리 ── */}
+      {tab === "teacher-apply" && (
+        <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-2">
+            <h2 className="text-sm font-black text-white">강사 신청 목록</h2>
+            <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full border border-zinc-700">{applications.length}건</span>
+            {pendingApplications.length > 0 && (
+              <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+                대기 {pendingApplications.length}건
+              </span>
+            )}
+          </div>
+          <div className="divide-y divide-zinc-800/50">
+            {applications.map(app => (
+              <div key={app.id} className="px-6 py-4 hover:bg-zinc-800/20 transition-colors">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-white">{app.userName || "-"}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        app.status === "PENDING"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                          : app.status === "APPROVED"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          : "bg-red-500/10 text-red-400 border-red-500/30"
+                      }`}>
+                        {app.status === "PENDING" ? "심사 중" : app.status === "APPROVED" ? "승인됨" : "거절됨"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500 mb-2">
+                      {app.userEmail} · 📞 {app.phone} · 신청일 {fmt(app.createdAt)}
+                      {app.reviewedAt && ` · 처리일 ${fmt(app.reviewedAt)}`}
+                    </p>
+                    <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">{app.introduction}</p>
+                    {app.rejectReason && (
+                      <p className="text-xs text-red-400 mt-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1.5">
+                        거절 사유: {app.rejectReason}
+                      </p>
+                    )}
+                  </div>
+                  {app.status === "PENDING" && (
+                    <div className="flex gap-2 shrink-0">
+                      <ActionBtn label="승인" color="emerald" onClick={() => handleApproveApplication(app.id)} />
+                      <ActionBtn label="거절" color="red" onClick={() => handleRejectApplication(app.id)} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {applications.length === 0 && (
+              <div className="text-center py-12 text-zinc-600 text-sm">강사 신청이 없습니다.</div>
+            )}
           </div>
         </div>
       )}

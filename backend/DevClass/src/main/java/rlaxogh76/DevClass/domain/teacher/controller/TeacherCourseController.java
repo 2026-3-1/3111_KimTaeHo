@@ -6,6 +6,7 @@ import rlaxogh76.DevClass.domain.review.dto.ReviewResponse;
 import rlaxogh76.DevClass.domain.review.service.ReviewService;
 import rlaxogh76.DevClass.domain.teacher.dto.*;
 import rlaxogh76.DevClass.domain.teacher.service.ProfileService;
+import rlaxogh76.DevClass.domain.teacher.service.TeacherApplicationService;
 import rlaxogh76.DevClass.domain.teacher.service.TeacherCourseService;
 import rlaxogh76.DevClass.domain.user.entity.User;
 import rlaxogh76.DevClass.global.exception.BusinessException;
@@ -28,6 +29,7 @@ import java.util.List;
 public class TeacherCourseController {
 
     private final TeacherCourseService teacherCourseService;
+    private final TeacherApplicationService teacherApplicationService;
     private final ProfileService profileService;
     private final ReviewService reviewService;
     private final QnaService qnaService;
@@ -185,6 +187,16 @@ public class TeacherCourseController {
     public ResponseEntity<List<QuestionResponse>> getMyQuestions(@AuthenticationPrincipal User user) {
         requireTeacher(user);
         return ResponseEntity.ok(qnaService.getTeacherQuestions(user.getId()));
+    }
+
+    @Operation(summary = "강사 신청")
+    @PostMapping("/apply")
+    public ResponseEntity<Void> applyForTeacher(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody TeacherApplicationRequest request) {
+        requireLogin(user);
+        teacherApplicationService.apply(user, request);
+        return ResponseEntity.ok().build();
     }
 
     private void requireLogin(User user) {

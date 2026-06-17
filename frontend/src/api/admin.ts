@@ -112,3 +112,26 @@ export const adminDeleteAnswer = async (answerId: number): Promise<void> =>
 // 이메일
 export const sendBroadcastEmail = async (subject: string, content: string, target: string): Promise<void> =>
   api.post("/admin/email/broadcast", { subject, content, target });
+
+// 강사 신청
+export type TeacherApplication = {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  phone: string;
+  introduction: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  reviewedAt: string | null;
+  rejectReason: string | null;
+};
+
+export const getTeacherApplications = async (): Promise<TeacherApplication[]> =>
+  (await api.get("/admin/teacher-applications")).data;
+
+export const approveTeacherApplication = async (id: number): Promise<void> =>
+  api.post(`/admin/teacher-applications/${id}/approve`);
+
+export const rejectTeacherApplication = async (id: number, reason?: string): Promise<void> =>
+  api.post(`/admin/teacher-applications/${id}/reject`, { reason });
