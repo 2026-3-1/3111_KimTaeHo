@@ -40,7 +40,9 @@ public enum ErrorCode {
     ANSWER_NOT_FOUND("존재하지 않는 답변입니다.", HttpStatus.NOT_FOUND),
     ANSWER_NOT_AUTHORIZED("강사만 답변을 작성할 수 있습니다.", HttpStatus.FORBIDDEN),
     ACCOUNT_SUSPENDED("정지된 계정입니다. 관리자에게 문의하세요.", HttpStatus.FORBIDDEN),
-    PAYMENT_ALREADY_CANCELLED("이미 취소된 결제입니다.", HttpStatus.BAD_REQUEST);
+    PAYMENT_ALREADY_CANCELLED("이미 취소된 결제입니다.", HttpStatus.BAD_REQUEST),
+    LOGIN_ATTEMPTS_EXCEEDED("로그인 시도 횟수를 초과했습니다. 15분 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
+    ADMIN_IP_BLOCKED("허용되지 않은 IP 주소에서의 관리자 접근입니다.", HttpStatus.FORBIDDEN);
 
     private final String message;
     private final HttpStatus status;

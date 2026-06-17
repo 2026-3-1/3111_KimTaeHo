@@ -117,4 +117,11 @@ public class AdminController {
         adminService.sendBroadcastEmail(request.subject(), request.content(), request.target());
         return ResponseEntity.accepted().build();
     }
+
+    // ── 감사 로그 ──────────────────────────────────────────────────────────
+
+    @GetMapping("/audit-logs")
+    public ResponseEntity<List<AdminAuditLogResponse>> getAuditLogs() {
+        return ResponseEntity.ok(adminService.getAuditLogs());
+    }
 }

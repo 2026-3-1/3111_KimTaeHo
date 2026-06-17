@@ -10,6 +10,7 @@ import rlaxogh76.DevClass.global.exception.BusinessException;
 import rlaxogh76.DevClass.global.exception.ErrorCode;
 import rlaxogh76.DevClass.global.jwt.JwtProvider;
 import rlaxogh76.DevClass.global.notification.EmailService;
+import rlaxogh76.DevClass.global.security.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +27,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final EmailVerificationService emailVerificationService;
     private final EmailService emailService;
+    private final LoginAttemptService loginAttemptService;
 
     public void sendVerificationCode(String email) {
         String code = emailVerificationService.generateAndStore(email);
@@ -68,14 +70,18 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (loginAttemptService.isBlocked(request.email())) {
+            throw new BusinessException(ErrorCode.LOGIN_ATTEMPTS_EXCEEDED);
+        }
+        User user = userRepository.findByEmail(request.email()).orElse(null);
+        if (user == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
+            loginAttemptService.recordFailure(request.email());
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
         if (!user.isActive()) {
             throw new BusinessException(ErrorCode.ACCOUNT_SUSPENDED);
         }
+        loginAttemptService.recordSuccess(request.email());
         String token = jwtProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
         return LoginResponse.of(token);
     }

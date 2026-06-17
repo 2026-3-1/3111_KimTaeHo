@@ -1,6 +1,8 @@
 package rlaxogh76.DevClass.domain.admin.service;
 
 import rlaxogh76.DevClass.domain.admin.dto.*;
+import rlaxogh76.DevClass.domain.admin.entity.AdminAuditLog;
+import rlaxogh76.DevClass.domain.admin.repository.AdminAuditLogRepository;
 import rlaxogh76.DevClass.domain.course.entity.Course;
 import rlaxogh76.DevClass.domain.course.repository.CourseRepository;
 import rlaxogh76.DevClass.domain.enrollment.repository.EnrollmentRepository;
@@ -44,6 +46,7 @@ public class AdminService {
     private final AnswerRepository answerRepository;
     private final TossPaymentClient tossPaymentClient;
     private final EmailService emailService;
+    private final AdminAuditLogRepository auditLogRepository;
 
     // ── 통계 ───────────────────────────────────────────────────────────────
 
@@ -208,6 +211,15 @@ public class AdminService {
             throw new BusinessException(ErrorCode.ANSWER_NOT_FOUND);
         }
         answerRepository.deleteById(answerId);
+    }
+
+    // ── 감사 로그 ──────────────────────────────────────────────────────────
+
+    public List<AdminAuditLogResponse> getAuditLogs() {
+        return auditLogRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(AdminAuditLogResponse::from)
+                .toList();
     }
 
     // ── 이메일 일괄 발송 ────────────────────────────────────────────────────

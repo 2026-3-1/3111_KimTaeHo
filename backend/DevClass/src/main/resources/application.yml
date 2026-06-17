@@ -36,6 +36,10 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  admin-expiration-ms: ${JWT_ADMIN_EXPIRATION_MS:3600000}
+
+admin:
+  allowed-ips: ${ADMIN_ALLOWED_IPS:0.0.0.0}
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}

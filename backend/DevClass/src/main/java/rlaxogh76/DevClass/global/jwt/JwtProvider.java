@@ -16,22 +16,26 @@ public class JwtProvider {
 
     private final SecretKey key;
     private final long expirationMs;
+    private final long adminExpirationMs;
 
     public JwtProvider(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration-ms}") long expirationMs
+            @Value("${jwt.expiration-ms}") long expirationMs,
+            @Value("${jwt.admin-expiration-ms:3600000}") long adminExpirationMs
     ) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
+        this.adminExpirationMs = adminExpirationMs;
     }
 
     public String generateToken(Long userId, String email, String role) {
+        long expiry = "ADMIN".equals(role) ? adminExpirationMs : expirationMs;
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .expiration(new Date(System.currentTimeMillis() + expiry))
                 .signWith(key)
                 .compact();
     }
