@@ -390,7 +390,6 @@ export default function CourseDetailPage() {
         courseId={course.id}
         teacherId={course.teacherId}
         questions={questions}
-        onRefresh={() => getQuestions(course.id).then(setQuestions).catch(console.error)}
       />
     </div>
   );

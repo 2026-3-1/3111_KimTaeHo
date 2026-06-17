@@ -238,7 +238,7 @@ export default function AdminPage() {
                   <Tooltip
                     contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 8 }}
                     labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
-                    formatter={(v: number) => [v.toLocaleString() + "원", "수익"]}
+                    formatter={(v) => [Number(v).toLocaleString() + "원", "수익"]}
                   />
                   <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                 </LineChart>

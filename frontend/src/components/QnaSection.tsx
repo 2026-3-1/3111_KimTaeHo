@@ -20,12 +20,10 @@ export default function QnaSection({
   courseId,
   teacherId,
   questions: initialQuestions,
-  onRefresh,
 }: {
   courseId: number;
   teacherId: number;
   questions: QnaQuestion[];
-  onRefresh: () => void;
 }) {
   const { user, isLoggedIn } = useAuth();
   const isTeacher = user?.id === teacherId;
@@ -36,7 +34,9 @@ export default function QnaSection({
   const [newContent, setNewContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [answerContent, setAnswerContent] = useState<Record<number, string>>({});
+  const [answerContent, setAnswerContent] = useState<Record<number, string>>(
+    {},
+  );
   const [answeringId, setAnsweringId] = useState<number | null>(null);
 
   const handleCreateQuestion = async () => {
@@ -157,7 +157,10 @@ export default function QnaSection({
       ) : (
         <div className="space-y-3">
           {questions.map((q) => (
-            <div key={q.id} className="border border-zinc-800 rounded-xl overflow-hidden">
+            <div
+              key={q.id}
+              className="border border-zinc-800 rounded-xl overflow-hidden"
+            >
               {/* 질문 헤더 */}
               <button
                 onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}
@@ -174,7 +177,9 @@ export default function QnaSection({
                         미답변
                       </span>
                     )}
-                    <p className="text-sm font-semibold text-white truncate">{q.title}</p>
+                    <p className="text-sm font-semibold text-white truncate">
+                      {q.title}
+                    </p>
                   </div>
                   <p className="text-xs text-zinc-500">
                     {q.authorName} · {formatDate(q.createdAt)}
@@ -204,9 +209,14 @@ export default function QnaSection({
 
                   {/* 답변 목록 */}
                   {q.answers.map((a) => (
-                    <div key={a.id} className="border-t border-zinc-800 p-4 bg-zinc-800/50 flex gap-3">
+                    <div
+                      key={a.id}
+                      className="border-t border-zinc-800 p-4 bg-zinc-800/50 flex gap-3"
+                    >
                       <div className="shrink-0 w-6 h-6 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
-                        <span className="text-orange-400 text-xs font-black">A</span>
+                        <span className="text-orange-400 text-xs font-black">
+                          A
+                        </span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-orange-400 mb-1">
@@ -245,7 +255,9 @@ export default function QnaSection({
                       <div className="flex justify-end">
                         <button
                           onClick={() => handleCreateAnswer(q.id)}
-                          disabled={answeringId === q.id || !answerContent[q.id]?.trim()}
+                          disabled={
+                            answeringId === q.id || !answerContent[q.id]?.trim()
+                          }
                           className="text-xs px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {answeringId === q.id ? "등록 중..." : "답변 등록"}
